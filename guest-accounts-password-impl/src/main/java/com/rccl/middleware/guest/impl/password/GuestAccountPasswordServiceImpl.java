@@ -28,6 +28,7 @@ import play.Configuration;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordService {
@@ -172,6 +173,18 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             return new Pair<>(emailNotification, pair.second());
                         })
         );
+    }
+    
+    @Override
+    public HeaderServiceCall<NotUsed, String> healthCheck() {
+        return (requestHeader, request) -> {
+            String quote = "Here's to tall ships. "
+                    + "Here's to small ships. "
+                    + "Here's to all the ships on the sea. "
+                    + "But the best ships are friendships, so here's to you and me!";
+            
+            return CompletableFuture.completedFuture(new Pair<>(ResponseHeader.OK, quote));
+        };
     }
     
     /**

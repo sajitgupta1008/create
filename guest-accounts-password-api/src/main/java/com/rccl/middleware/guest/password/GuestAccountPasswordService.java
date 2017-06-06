@@ -10,6 +10,7 @@ import com.lightbend.lagom.javadsl.api.broker.Topic;
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
 import static com.lightbend.lagom.javadsl.api.Service.topic;
+import static com.lightbend.lagom.javadsl.api.transport.Method.GET;
 import static com.lightbend.lagom.javadsl.api.transport.Method.POST;
 import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
@@ -23,11 +24,14 @@ public interface GuestAccountPasswordService extends Service {
     
     Topic<EmailNotification> emailNotificationTopic();
     
+    ServiceCall<NotUsed, String> healthCheck();
+    
     @Override
     default Descriptor descriptor() {
         return named("guestAccountsPassword").withCalls(
                 restCall(POST, "/v1/guestAccounts/:emailId/forgotPassword", this::forgotPassword),
-                restCall(PUT, "/v1/guestAccounts/:emailId/password", this::updatePassword))
+                restCall(PUT, "/v1/guestAccounts/:emailId/password", this::updatePassword),
+                restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
                 .publishing(
                         topic(NOTIFICATIONS_TOPIC, this::emailNotificationTopic)
                 )

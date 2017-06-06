@@ -10,8 +10,8 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>guest-account-password-api</module>
-    <module>guest-account-password-impl</module>
+    <module>guest-accounts-password-api</module>
+    <module>guest-accounts-password-impl</module>
   </modules>
 
   <properties>

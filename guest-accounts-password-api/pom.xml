@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>guest-account-password-api</artifactId>
+  <artifactId>guest-accounts-password-api</artifactId>
 
   <packaging>jar</packaging>
 
