@@ -5,6 +5,6 @@ RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-COPY ./target/guest-account-password-impl-1.0-SNAPSHOT /usr/src/app
+COPY ./target/guest-accounts-password-impl-1.0-SNAPSHOT /usr/src/app
 
-CMD bash -C 'bin/guest-account-password-impl';'bash'
+CMD bash -C 'bin/guest-accounts-password-impl';'bash'
