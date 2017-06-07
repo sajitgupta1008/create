@@ -6,6 +6,7 @@ import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
+import com.typesafe.config.ConfigFactory;
 
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
@@ -15,8 +16,6 @@ import static com.lightbend.lagom.javadsl.api.transport.Method.POST;
 import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
 public interface GuestAccountPasswordService extends Service {
-    
-    String NOTIFICATIONS_TOPIC = "notifications.email";
     
     ServiceCall<NotUsed, NotUsed> forgotPassword(String email);
     
@@ -33,8 +32,12 @@ public interface GuestAccountPasswordService extends Service {
                 restCall(PUT, "/v1/guestAccounts/:emailId/password", this::updatePassword),
                 restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
                 .publishing(
-                        topic(NOTIFICATIONS_TOPIC, this::emailNotificationTopic)
+                        topic(getKafkaTopicName(), this::emailNotificationTopic)
                 )
                 .withAutoAcl(true);
+    }
+    
+    default String getKafkaTopicName() {
+        return ConfigFactory.load().getString("kafka.topic.name");
     }
 }
