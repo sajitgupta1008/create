@@ -103,7 +103,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     })
                     .thenCombineAsync(getGuestAccountFuture, (resetPasswordLinkJsonNode, getGuestAccountJsonNode) -> {
                         String resetPasswordURL = resetPasswordLinkJsonNode.get("url").asText();
-                        String guestName = getGuestAccountJsonNode.get("Attributes").get("customproperty1").asText();
+                        String guestName = getGuestAccountJsonNode.get("Attributes").get("firstname").asText();
                         
                         persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
                                 .ask(new EmailNotificationCommand.SendEmailNotification(
