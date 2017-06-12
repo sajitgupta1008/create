@@ -74,8 +74,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     .invoke()
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
-                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException ||
-                                cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                             throw new GuestNotFoundException();
                         }
                         
@@ -90,8 +90,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     .invoke()
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
-                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException ||
-                                cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                             throw new GuestNotFoundException();
                         }
                         
