@@ -27,7 +27,7 @@
     <lombok.version>1.16.16</lombok.version>
     <lagom.version>1.3.4</lagom.version>
     <middleware.common.version>1.1.0</middleware.common.version>
-    <middleware.saviynt.version>1.1-SNAPSHOT</middleware.saviynt.version>
+    <middleware.saviynt.version>1.0-SNAPSHOT</middleware.saviynt.version>
     <org.json.version>20160810</org.json.version>
     <play.version>2.5.14</play.version>
     <saaj.api.version>1.3.4</saaj.api.version>
