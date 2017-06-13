@@ -26,7 +26,7 @@ public class InvalidGuestException extends MiddlewareTransportException {
         INVALID_EMAIL = new InvalidGuestException(emailError);
     }
     
-    private InvalidGuestExceptionMessage invalidGuestPasswordExceptionMsg;
+    private InvalidGuestExceptionMessage invalidGuestExceptionMsg;
     
     public InvalidGuestException(Map<String, String> validationErrors) {
         this("The request body is improper.", validationErrors);
@@ -35,13 +35,13 @@ public class InvalidGuestException extends MiddlewareTransportException {
     public InvalidGuestException(String errorMessage, Map<String, String> validationErrors) {
         super(TransportErrorCode.fromHttp(422), new InvalidGuestExceptionMessage(errorMessage));
         
-        this.invalidGuestPasswordExceptionMsg = (InvalidGuestExceptionMessage) super.exceptionMessage();
-        invalidGuestPasswordExceptionMsg.setValidationErrors(validationErrors);
+        this.invalidGuestExceptionMsg = (InvalidGuestExceptionMessage) super.exceptionMessage();
+        invalidGuestExceptionMsg.setValidationErrors(validationErrors);
     }
     
     @Override
     public InvalidGuestExceptionMessage exceptionMessage() {
-        return this.invalidGuestPasswordExceptionMsg;
+        return this.invalidGuestExceptionMsg;
     }
     
     public static final class InvalidGuestExceptionMessage extends MiddlewareExceptionMessage {
