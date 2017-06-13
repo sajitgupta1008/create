@@ -1,8 +1,9 @@
 package com.rccl.middleware.guest.impl.password;
 
 
+import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.exceptions.InvalidGuestPasswordException;
+import com.rccl.middleware.guest.password.exceptions.InvalidGuestException;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
@@ -26,7 +27,7 @@ public class GuestAccountPasswordValidator {
     /**
      * Validate the given {@link PasswordInformation}
      * <p>
-     * If the attribute is invalid, an unhandled {@link InvalidGuestPasswordException} is thrown. Otherwise,
+     * If the attribute is invalid, an unhandled {@link InvalidGuestException} is thrown. Otherwise,
      * nothing happens.
      *
      * @param passwordInformation {@link PasswordInformation}
@@ -54,7 +55,39 @@ public class GuestAccountPasswordValidator {
                 )
         );
         
-        throw new InvalidGuestPasswordException(violationsReport);
+        throw new InvalidGuestException(violationsReport);
+    }
+    
+    /**
+     * Validate the given {@link ForgotPassword}
+     * <p>
+     * If the attribute is invalid, an unhandled {@link InvalidGuestException} is thrown. Otherwise,
+     * nothing happens.
+     *
+     * @param forgotPassword {@link ForgotPassword}
+     * @param email          {@code String}
+     */
+    public void validateForgotPasswordFields(ForgotPassword forgotPassword, String email) {
+        final ForgotPassword forgotPasswordWithEmail = ForgotPassword.builder()
+                .email(email)
+                .link(forgotPassword.getLink())
+                .build();
+        
+        Set<ConstraintViolation<ForgotPassword>> violations = validator.validate(forgotPasswordWithEmail, Default.class);
+        
+        if (violations.isEmpty()) {
+            return;
+        }
+        
+        Map<String, String> violationsReport = violations.stream().collect(
+                Collectors.toMap(
+                        cv -> cv.getPropertyPath().toString(),
+                        ConstraintViolation::getMessage,
+                        (duplicate1, duplicate2) -> duplicate1
+                )
+        );
+        
+        throw new InvalidGuestException(violationsReport);
     }
     
     /**
