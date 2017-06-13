@@ -44,8 +44,8 @@ public class GuestAccountPasswordValidator implements ConstraintValidator<GuestA
             }
         }
         
-        return !((numberOfSpecialCharacters < NUMBER_OF_REQUIRED_SPECIAL) ||
-                (numberOfLetters < NUMBER_OF_REQUIRED_LETTERS) ||
-                (numberOfNumbers < NUMBER_OF_REQUIRED_NUMBERS));
+        return !((numberOfSpecialCharacters < NUMBER_OF_REQUIRED_SPECIAL)
+                || (numberOfLetters < NUMBER_OF_REQUIRED_LETTERS)
+                || (numberOfNumbers < NUMBER_OF_REQUIRED_NUMBERS));
     }
 }
