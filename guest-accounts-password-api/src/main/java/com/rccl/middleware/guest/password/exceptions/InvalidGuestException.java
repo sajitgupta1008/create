@@ -9,30 +9,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class InvalidGuestPasswordException extends MiddlewareTransportException {
+public class InvalidGuestException extends MiddlewareTransportException {
     
-    public static final InvalidGuestPasswordException INVALID_PASSWORD;
+    public static final InvalidGuestException INVALID_PASSWORD;
     
-    public static final InvalidGuestPasswordException INVALID_EMAIL;
-    
-    private InvalidGuestPasswordExceptionMessage invalidGuestPasswordExceptionMsg;
+    public static final InvalidGuestException INVALID_EMAIL;
     
     static {
         Map<String, String> passwordError = new HashMap<>();
-        passwordError.put("password", "The password must be between 7 and 10 characters, inclusive, " +
-                "with at least three (3) letters and two (2) numbers.");
-        INVALID_PASSWORD = new InvalidGuestPasswordException(passwordError);
-    
+        passwordError.put("password", "The password must be between 7 and 10 characters, inclusive, "
+                + "with at least three (3) letters and two (2) numbers.");
+        INVALID_PASSWORD = new InvalidGuestException(passwordError);
+        
         Map<String, String> emailError = new HashMap<>();
         passwordError.put("password", "The email is in an invalid format.");
-        INVALID_EMAIL = new InvalidGuestPasswordException(emailError);
+        INVALID_EMAIL = new InvalidGuestException(emailError);
     }
     
-    public InvalidGuestPasswordException(Map<String, String> validationErrors) {
+    private InvalidGuestPasswordExceptionMessage invalidGuestPasswordExceptionMsg;
+    
+    public InvalidGuestException(Map<String, String> validationErrors) {
         this("The request body is improper.", validationErrors);
     }
     
-    public InvalidGuestPasswordException(String errorMessage, Map<String, String> validationErrors) {
+    public InvalidGuestException(String errorMessage, Map<String, String> validationErrors) {
         super(TransportErrorCode.fromHttp(422), new InvalidGuestPasswordExceptionMessage(errorMessage));
         
         this.invalidGuestPasswordExceptionMsg = (InvalidGuestPasswordExceptionMessage) super.exceptionMessage();
