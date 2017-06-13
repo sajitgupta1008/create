@@ -15,13 +15,15 @@ import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.hateoas.HATEOASLinks;
 import com.rccl.middleware.common.hateoas.Link;
 import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
-import com.rccl.middleware.guest.password.exceptions.InvalidEmailFormatException;
-import com.rccl.middleware.guest.password.exceptions.InvalidGuestPasswordException;
+import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
+import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
 import com.rccl.middleware.saviynt.api.SaviyntGuest;
 import com.rccl.middleware.saviynt.api.SaviyntService;
+import com.rccl.middleware.saviynt.api.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import org.apache.commons.lang3.StringUtils;
 import play.Configuration;
@@ -61,12 +63,12 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<NotUsed, NotUsed> forgotPassword(String email) {
+    public HeaderServiceCall<ForgotPassword, NotUsed> forgotPassword(String email) {
         return (requestHeader, request) -> {
             
-            if (!guestAccountPasswordValidator.isValidEmailFormat(email)) {
-                throw new InvalidEmailFormatException();
-            }
+            guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
+            
+            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().email(email).build();
             
             // Invoke Saviynt getUser to get the guest information then combine it
             // with Savyint getResetPasswordLink invocation.
@@ -80,30 +82,29 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw InvalidGuestPasswordException.INVALID_EMAIL;
+                            throw new InvalidEmailException();
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     });
             
-            return saviyntService.getResetPasswordLink(email)
-                    .invoke()
+            return saviyntService.postUserToken()
+                    .invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
-                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
-                                || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        if (cause instanceof SaviyntExceptionFactory.MissingUsernameException) {
                             throw new GuestNotFoundException();
-                        }
-                        
-                        if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw InvalidGuestPasswordException.INVALID_EMAIL;
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
-                    .thenCombineAsync(getGuestAccountFuture, (resetPasswordLinkJsonNode, getGuestAccountJsonNode) -> {
-                        String resetPasswordURL = resetPasswordLinkJsonNode.get("url").asText();
+                    .thenCombineAsync(getGuestAccountFuture, (userTokenJsonNode, getGuestAccountJsonNode) -> {
+                        String userToken = userTokenJsonNode.get("TOKEN").asText();
                         String guestName = getGuestAccountJsonNode.get("Attributes").get("firstname").asText();
+                        
+                        StringBuilder resetPasswordURL = new StringBuilder(request.getLink());
+                        resetPasswordURL.append("?token=");
+                        resetPasswordURL.append(userToken);
                         
                         persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
                                 .ask(new EmailNotificationCommand.SendEmailNotification(
@@ -111,7 +112,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                                 .recipient(email)
                                                 .sender("notifications@rccl.com")
                                                 .subject("Reset your My Cruises password")
-                                                .content(this.composeDummyEmailContent(guestName, email, resetPasswordURL))
+                                                .content(this.composeDummyEmailContent(guestName, email, resetPasswordURL.toString()))
                                                 .build()
                                 ));
                         
@@ -137,11 +138,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw InvalidGuestPasswordException.INVALID_EMAIL;
+                            throw new InvalidEmailException();
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
-                            throw InvalidGuestPasswordException.INVALID_PASSWORD;
+                            throw new InvalidPasswordException();
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), exception);
