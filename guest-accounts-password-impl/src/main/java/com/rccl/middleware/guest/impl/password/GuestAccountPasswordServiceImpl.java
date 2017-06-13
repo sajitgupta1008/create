@@ -67,7 +67,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
             
-            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().user(email).build();
+            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().email(email).build();
             
             // Invoke Saviynt getUser to get the guest information then combine it
             // with Savyint getResetPasswordLink invocation.
