@@ -16,10 +16,10 @@ import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
 import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.exceptions.InvalidEmailFormatException;
-import com.rccl.middleware.guest.password.exceptions.InvalidGuestPasswordException;
+import com.rccl.middleware.guest.password.exceptions.InvalidGuestException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -81,11 +81,11 @@ public class GuestAccountPasswordServiceTest {
     
     @Test
     public void shouldPostForgotPasswordSuccessfully() throws Exception {
-        HeaderServiceCall<NotUsed, NotUsed> forgotPasswordService =
-                (HeaderServiceCall<NotUsed, NotUsed>) guestAccountPasswordService.forgotPassword("abc.xyz@domain123.com");
+        HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
+                (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("abc.xyz@domain123.com");
         
         Pair<ResponseHeader, NotUsed> result = forgotPasswordService
-                .invokeWithHeaders(RequestHeader.DEFAULT, null)
+                .invokeWithHeaders(RequestHeader.DEFAULT, createSampleForgotPassword())
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
         
@@ -130,7 +130,7 @@ public class GuestAccountPasswordServiceTest {
                     );
             
             client.forgotPassword("abc.xyz@domain123.com")
-                    .invoke(NotUsed.getInstance())
+                    .invoke(createSampleForgotPassword())
                     .toCompletableFuture()
                     .get(10, TimeUnit.SECONDS);
             
@@ -143,27 +143,27 @@ public class GuestAccountPasswordServiceTest {
         });
     }
     
-    @Test(expected = InvalidEmailFormatException.class)
+    @Test(expected = InvalidGuestException.class)
     public void shouldFailForgottenPasswordForInvalidEmail() throws Exception {
-        HeaderServiceCall<NotUsed, NotUsed> forgotPasswordService =
-                (HeaderServiceCall<NotUsed, NotUsed>) guestAccountPasswordService.forgotPassword("jsmith@rccl");
+        HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
+                (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("jsmith@rccl");
         
         Pair<ResponseHeader, NotUsed> result = forgotPasswordService
-                .invokeWithHeaders(RequestHeader.DEFAULT, null)
+                .invokeWithHeaders(RequestHeader.DEFAULT, createSampleForgotPassword())
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
         
-        assertNotNull("The test should throw InvalidEmailFormatException.", result.second());
+        assertNotNull("The test should throw InvalidGuestException.", result.second());
         
     }
     
     @Test(expected = SaviyntExceptionFactory.ExistingGuestException.class)
     public void shouldFailForgottenPasswordForNonExistingAccount() throws Exception {
-        HeaderServiceCall<NotUsed, NotUsed> forgotPasswordService =
-                (HeaderServiceCall<NotUsed, NotUsed>) guestAccountPasswordService.forgotPassword("random@email.com");
+        HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
+                (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("random@email.com");
         
         Pair<ResponseHeader, NotUsed> result = forgotPasswordService
-                .invokeWithHeaders(RequestHeader.DEFAULT, null)
+                .invokeWithHeaders(RequestHeader.DEFAULT, createSampleForgotPassword())
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
         
@@ -206,9 +206,9 @@ public class GuestAccountPasswordServiceTest {
             assertNotNull("This should fail and throw an exception instead.", result);
             
         } catch (Exception ex) {
-            assertTrue(ex instanceof InvalidGuestPasswordException);
+            assertTrue(ex instanceof InvalidGuestException);
             
-            InvalidGuestPasswordException exception = (InvalidGuestPasswordException) ex;
+            InvalidGuestException exception = (InvalidGuestException) ex;
             
             assertNotNull("ExceptionMessage should not be null or empty.", exception.exceptionMessage());
             
@@ -238,5 +238,9 @@ public class GuestAccountPasswordServiceTest {
         } catch (Exception ex) {
             assertTrue(ex instanceof SaviyntExceptionFactory.NoSuchGuestException);
         }
+    }
+    
+    private final ForgotPassword createSampleForgotPassword() {
+        return ForgotPassword.builder().link("www.rccl.com/forgotPassword").build();
     }
 }
