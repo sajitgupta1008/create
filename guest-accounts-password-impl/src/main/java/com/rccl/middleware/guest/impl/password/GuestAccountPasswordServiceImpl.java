@@ -87,7 +87,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     });
             
-            return saviyntService.postUserToken(email)
+            return saviyntService.postUserToken()
                     .invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
