@@ -1,19 +1,15 @@
 package com.rccl.middleware.guest.impl.password;
 
 
+import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.InvalidGuestException;
 
 import javax.inject.Inject;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import javax.validation.groups.Default;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class GuestAccountPasswordValidator {
     
@@ -41,21 +37,7 @@ public class GuestAccountPasswordValidator {
                 .password(passwordInformation.getPassword())
                 .build();
         
-        Set<ConstraintViolation<PasswordInformation>> violations = validator.validate(infoWithEmail, Default.class);
-        
-        if (violations.isEmpty()) {
-            return;
-        }
-        
-        Map<String, String> violationsReport = violations.stream().collect(
-                Collectors.toMap(
-                        cv -> cv.getPropertyPath().toString(),
-                        ConstraintViolation::getMessage,
-                        (duplicate1, duplicate2) -> duplicate1
-                )
-        );
-        
-        throw new InvalidGuestException(violationsReport);
+        MiddlewareValidation.validate(infoWithEmail);
     }
     
     /**
@@ -73,21 +55,7 @@ public class GuestAccountPasswordValidator {
                 .link(forgotPassword.getLink())
                 .build();
         
-        Set<ConstraintViolation<ForgotPassword>> violations = validator.validate(forgotPasswordWithEmail, Default.class);
-        
-        if (violations.isEmpty()) {
-            return;
-        }
-        
-        Map<String, String> violationsReport = violations.stream().collect(
-                Collectors.toMap(
-                        cv -> cv.getPropertyPath().toString(),
-                        ConstraintViolation::getMessage,
-                        (duplicate1, duplicate2) -> duplicate1
-                )
-        );
-        
-        throw new InvalidGuestException(violationsReport);
+        MiddlewareValidation.validate(forgotPasswordWithEmail);
     }
     
     /**
