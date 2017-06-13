@@ -19,7 +19,8 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
-import com.rccl.middleware.guest.password.exceptions.InvalidGuestException;
+import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
+import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
 import com.rccl.middleware.saviynt.api.SaviyntGuest;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntUserToken;
@@ -81,7 +82,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw InvalidGuestException.INVALID_EMAIL;
+                            throw new InvalidEmailException();
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
@@ -137,11 +138,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw InvalidGuestException.INVALID_EMAIL;
+                            throw new InvalidEmailException();
                         }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
-                            throw InvalidGuestException.INVALID_PASSWORD;
+                            throw new InvalidPasswordException();
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), exception);

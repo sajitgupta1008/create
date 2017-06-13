@@ -15,11 +15,11 @@ import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
+import com.rccl.middleware.common.validation.MiddlewareValidationException;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.exceptions.InvalidGuestException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -37,7 +37,6 @@ import static com.lightbend.lagom.javadsl.testkit.ServiceTest.withServer;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -143,7 +142,7 @@ public class GuestAccountPasswordServiceTest {
         });
     }
     
-    @Test(expected = InvalidGuestException.class)
+    @Test(expected = MiddlewareValidationException.class)
     public void shouldFailForgottenPasswordForInvalidEmail() throws Exception {
         HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
                 (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("jsmith@rccl");
@@ -153,7 +152,7 @@ public class GuestAccountPasswordServiceTest {
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
         
-        assertNotNull("The test should throw InvalidGuestException.", result.second());
+        assertNotNull("The test should throw MiddlewareValidationException.", result.second());
         
     }
     
@@ -188,56 +187,38 @@ public class GuestAccountPasswordServiceTest {
         assertTrue("Response message must be successful.", result.first().status() == 200);
     }
     
-    @Test
+    @Test(expected = MiddlewareValidationException.class)
     public void shouldNotUpdatePasswordWithInvalidFields() throws Exception {
         String testEmailId = "invalidemail@domain.com2";
         PasswordInformation passwordInformation = PasswordInformation.builder()
                 .brand('R').password("123".toCharArray()).build();
         
-        try {
-            HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                    (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
-            
-            Pair<ResponseHeader, JsonNode> result = updatePasswordService
-                    .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
-                    .toCompletableFuture()
-                    .get(5, TimeUnit.SECONDS);
-            
-            assertNotNull("This should fail and throw an exception instead.", result);
-            
-        } catch (Exception ex) {
-            assertTrue(ex instanceof InvalidGuestException);
-            
-            InvalidGuestException exception = (InvalidGuestException) ex;
-            
-            assertNotNull("ExceptionMessage should not be null or empty.", exception.exceptionMessage());
-            
-            assertTrue("Error message should say The request body is improper.", exception.exceptionMessage().getErrorMessage().equals("The request body is improper."));
-            
-            assertFalse("Validation Error HashMap should NOT be empty.", exception.exceptionMessage().getValidationErrors().isEmpty());
-        }
+        HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
+                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
+        
+        Pair<ResponseHeader, JsonNode> result = updatePasswordService
+                .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
+                .toCompletableFuture()
+                .get(5, TimeUnit.SECONDS);
+        
+        assertNotNull("This should fail and throw an exception instead.", result);
     }
     
-    @Test
+    @Test(expected = SaviyntExceptionFactory.NoSuchGuestException.class)
     public void shouldNotUpdatePasswordForNonExistingUser() throws Exception {
         String testEmailId = "failure@domain.com";
         PasswordInformation passwordInformation = PasswordInformation.builder()
                 .brand('R').password("RCCL12345".toCharArray()).build();
         
-        try {
-            HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                    (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
-            
-            Pair<ResponseHeader, JsonNode> result = updatePasswordService
-                    .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
-                    .toCompletableFuture()
-                    .get(5, TimeUnit.SECONDS);
-            
-            assertTrue("This should fail and throw an exception instead.", result == null);
-            
-        } catch (Exception ex) {
-            assertTrue(ex instanceof SaviyntExceptionFactory.NoSuchGuestException);
-        }
+        HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
+                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
+        
+        Pair<ResponseHeader, JsonNode> result = updatePasswordService
+                .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
+                .toCompletableFuture()
+                .get(5, TimeUnit.SECONDS);
+        
+        assertTrue("This should fail and throw an exception instead.", result == null);
     }
     
     private final ForgotPassword createSampleForgotPassword() {
