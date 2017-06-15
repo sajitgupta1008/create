@@ -222,6 +222,6 @@ public class GuestAccountPasswordServiceTest {
     }
     
     private final ForgotPassword createSampleForgotPassword() {
-        return ForgotPassword.builder().link("www.rccl.com/forgotPassword").build();
+        return ForgotPassword.builder().link("http://www.rccl.com/forgotPassword").build();
     }
 }
