@@ -8,6 +8,8 @@ import lombok.Value;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.constraints.Pattern;
+
 @Value
 @Builder
 public class ForgotPassword {
@@ -19,5 +21,7 @@ public class ForgotPassword {
     String email;
     
     @NotEmpty(message = "A reset password link is required.")
+    @Pattern(regexp = "\\b(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]",
+            message = "The URL is invalidly formatted.")
     String link;
 }
