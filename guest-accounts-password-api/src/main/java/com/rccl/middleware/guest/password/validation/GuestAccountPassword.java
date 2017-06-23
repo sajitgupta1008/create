@@ -16,7 +16,7 @@ public @interface GuestAccountPassword {
     
     Class<?>[] groups() default {};
     
-    String message() default "The password must be between 7 and 10 characters, inclusive, "
+    String message() default "The password must be between 7 and 32 characters, inclusive, "
             + "with at least three (3) letters, two (2) numbers, and one (1) special character.";
     
     Class<? extends Payload>[] payload() default {};
