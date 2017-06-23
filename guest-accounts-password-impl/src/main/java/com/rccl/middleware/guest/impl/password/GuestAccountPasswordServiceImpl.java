@@ -30,6 +30,7 @@ import play.Configuration;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -72,7 +73,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             // Invoke Saviynt getUser to get the guest information then combine it
             // with Savyint getResetPasswordLink invocation.
-            CompletionStage<JsonNode> getGuestAccountFuture = saviyntService.getGuestAccount("email", email)
+            CompletionStage<JsonNode> getGuestAccountFuture = saviyntService.getGuestAccount("email", Optional.of(email), Optional.empty())
                     .invoke()
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
@@ -88,7 +89,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     });
             
-            return saviyntService.postUserToken()
+            return saviyntService.retrieveUserToken()
                     .invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
@@ -128,7 +129,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             final SaviyntGuest savinyntGuest = this.mapAttributesToSaviynt(request, email);
             return saviyntService
-                    .putGuestAccount()
+                    .updateGuestAccount()
                     .invoke(savinyntGuest)
                     .exceptionally(exception -> {
                         Throwable cause = exception.getCause();
