@@ -21,7 +21,7 @@ public interface GuestAccountPasswordService extends Service {
     
     ServiceCall<ForgotPassword, NotUsed> forgotPassword(String email);
     
-    ServiceCall<PasswordInformation, JsonNode> updatePassword(String email);
+    ServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId);
     
     Topic<EmailNotification> emailNotificationTopic();
     
@@ -31,7 +31,7 @@ public interface GuestAccountPasswordService extends Service {
     default Descriptor descriptor() {
         return named("guestAccountsPassword").withCalls(
                 restCall(POST, "/v1/guestAccounts/:email/forgotPassword", this::forgotPassword),
-                restCall(PUT, "/v1/guestAccounts/:email/password", this::updatePassword),
+                restCall(PUT, "/v1/guestAccounts/:vdsId/password", this::updatePassword),
                 restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
                 .publishing(
                         topic(KAFKA_TOPIC_NAME, this::emailNotificationTopic)
