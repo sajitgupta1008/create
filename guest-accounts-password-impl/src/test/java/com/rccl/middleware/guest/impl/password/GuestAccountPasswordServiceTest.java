@@ -171,12 +171,12 @@ public class GuestAccountPasswordServiceTest {
     
     @Test
     public void shouldUpdatePasswordSuccessfully() throws Exception {
-        String testEmailId = "successful@domain.com";
+        String testVdsId = "G1234567";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .brand('R').password("RCCL@1232".toCharArray()).build();
+                .password("RCCL@1232".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
+                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
         
         Pair<ResponseHeader, JsonNode> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
@@ -189,12 +189,12 @@ public class GuestAccountPasswordServiceTest {
     
     @Test(expected = MiddlewareValidationException.class)
     public void shouldNotUpdatePasswordWithInvalidFields() throws Exception {
-        String testEmailId = "invalidemail@domain.com2";
+        String testVdsId = "G1234567";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .brand('R').password("123".toCharArray()).build();
+                .password("123".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
+                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
         
         Pair<ResponseHeader, JsonNode> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
@@ -206,12 +206,12 @@ public class GuestAccountPasswordServiceTest {
     
     @Test(expected = SaviyntExceptionFactory.NoSuchGuestException.class)
     public void shouldNotUpdatePasswordForNonExistingUser() throws Exception {
-        String testEmailId = "failure@domain.com";
+        String testVdsId = "G2342423";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .brand('R').password("RCCL12345".toCharArray()).build();
+                .password("RCCL12345!".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testEmailId);
+                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
         
         Pair<ResponseHeader, JsonNode> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)

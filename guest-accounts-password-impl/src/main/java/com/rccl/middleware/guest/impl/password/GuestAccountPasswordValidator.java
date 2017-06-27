@@ -15,13 +15,13 @@ public class GuestAccountPasswordValidator {
      * nothing happens.
      *
      * @param passwordInformation {@link PasswordInformation}
-     * @param email               {@code String}
+     * @param vdsId               {@code String}
      */
-    public void validateAccountPasswordFields(PasswordInformation passwordInformation, String email) {
+    public void validateAccountPasswordFields(PasswordInformation passwordInformation, String vdsId) {
         
         final PasswordInformation infoWithEmail = PasswordInformation.builder()
-                .email(email)
-                .brand(passwordInformation.getBrand())
+                .vdsId(vdsId)
+                .token(passwordInformation.getToken())
                 .password(passwordInformation.getPassword())
                 .build();
         

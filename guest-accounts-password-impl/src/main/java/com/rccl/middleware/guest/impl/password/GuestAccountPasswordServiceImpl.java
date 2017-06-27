@@ -30,6 +30,7 @@ import play.Configuration;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -68,11 +69,12 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
             
-            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().email(email).build();
+            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().user(email).build();
             
             // Invoke Saviynt getUser to get the guest information then combine it
             // with Savyint getResetPasswordLink invocation.
-            CompletionStage<JsonNode> getGuestAccountFuture = saviyntService.getGuestAccount("email", email)
+            CompletionStage<JsonNode> getGuestAccountFuture = saviyntService
+                    .getGuestAccount("email", Optional.of(email), Optional.empty())
                     .invoke()
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
@@ -88,7 +90,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     });
             
-            return saviyntService.postUserToken()
+            return saviyntService.retrieveUserToken()
                     .invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
@@ -122,13 +124,13 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword(String email) {
+    public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId) {
         return (requestHeader, request) -> {
-            guestAccountPasswordValidator.validateAccountPasswordFields(request, email);
+            guestAccountPasswordValidator.validateAccountPasswordFields(request, vdsId);
             
-            final SaviyntGuest savinyntGuest = this.mapAttributesToSaviynt(request, email);
+            final SaviyntGuest savinyntGuest = this.mapAttributesToSaviynt(request, vdsId);
             return saviyntService
-                    .putGuestAccount()
+                    .updateGuestAccount()
                     .invoke(savinyntGuest)
                     .exceptionally(exception -> {
                         Throwable cause = exception.getCause();
@@ -149,7 +151,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     })
                     .thenApply(response -> {
                         ObjectNode objectNode = OBJECT_MAPPER.createObjectNode();
-                        this.passwordServiceLinks.forEach(link -> link.substituteArguments(email));
+                        this.passwordServiceLinks.forEach(link -> link.substituteArguments(vdsId));
                         objectNode.putPOJO("_links", this.passwordServiceLinks);
                         
                         return new Pair<>(ResponseHeader.OK.withStatus(200), objectNode);
@@ -192,13 +194,14 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * Sets all the necessary attribute values for password update in Saviynt model.
      *
      * @param passwordInformation {@link PasswordInformation}
-     * @param email               {@code String}
+     * @param vdsId               {@code String}
      * @return {@code SaviyntGuest}
      */
-    private SaviyntGuest mapAttributesToSaviynt(PasswordInformation passwordInformation, String email) {
+    private SaviyntGuest mapAttributesToSaviynt(PasswordInformation passwordInformation, String vdsId) {
         return SaviyntGuest.builder()
-                .email(email)
+                .vdsId(vdsId)
                 .password(passwordInformation.getPassword())
+                .propertytosearch("systemUserName")
                 .build();
     }
     

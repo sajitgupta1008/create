@@ -24,7 +24,7 @@ public class GuestAccountPasswordValidator implements ConstraintValidator<GuestA
             return true;
         }
         
-        if (password.length < 7 || password.length > 10) {
+        if (password.length < 7 || password.length > 32) {
             return false;
         }
         
