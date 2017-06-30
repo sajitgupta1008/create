@@ -311,7 +311,7 @@
     <repository>
       <snapshots>
         <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
+        <updatePolicy>always</updatePolicy>
         <checksumPolicy>fail</checksumPolicy>
       </snapshots>
       <id>middleware-nexus-snapshot</id>
