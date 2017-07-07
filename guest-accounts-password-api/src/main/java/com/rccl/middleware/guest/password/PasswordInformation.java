@@ -2,7 +2,7 @@ package com.rccl.middleware.guest.password;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lightbend.lagom.serialization.Jsonable;
-import com.rccl.middleware.guest.password.validation.GuestAccountPassword;
+import com.rccl.middleware.common.validation.validator.GuestAccountPassword;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

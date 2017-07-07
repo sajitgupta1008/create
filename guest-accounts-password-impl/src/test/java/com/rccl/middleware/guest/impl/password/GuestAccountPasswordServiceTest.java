@@ -92,7 +92,7 @@ public class GuestAccountPasswordServiceTest {
     }
     
     @Test
-    public void shouldProcessEmailNotificationCQRS() {
+    public void shouldProcessEmailNotificationEntity() {
         EmailNotification emailNotificationSample = EmailNotification.builder()
                 .recipient("abc.xyz@domain123.com")
                 .sender("sender@email.com")
@@ -173,7 +173,7 @@ public class GuestAccountPasswordServiceTest {
     public void shouldUpdatePasswordSuccessfully() throws Exception {
         String testVdsId = "G1234567";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .password("RCCL@1232".toCharArray()).token("thisisasampletoken").build();
+                .password("password!".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
                 (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
@@ -208,7 +208,7 @@ public class GuestAccountPasswordServiceTest {
     public void shouldNotUpdatePasswordForNonExistingUser() throws Exception {
         String testVdsId = "G2342423";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .password("RCCL12345!".toCharArray()).token("thisisasampletoken").build();
+                .password("password!".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
                 (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
