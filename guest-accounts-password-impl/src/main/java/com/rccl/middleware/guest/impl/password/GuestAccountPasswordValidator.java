@@ -18,14 +18,11 @@ public class GuestAccountPasswordValidator {
      * @param vdsId               {@code String}
      */
     public void validateAccountPasswordFields(PasswordInformation passwordInformation, String vdsId) {
-        
-        final PasswordInformation infoWithEmail = PasswordInformation.builder()
+        MiddlewareValidation.validate(PasswordInformation.builder()
                 .vdsId(vdsId)
                 .token(passwordInformation.getToken())
                 .password(passwordInformation.getPassword())
-                .build();
-        
-        MiddlewareValidation.validate(infoWithEmail);
+                .build());
     }
     
     /**
@@ -38,11 +35,9 @@ public class GuestAccountPasswordValidator {
      * @param email          {@code String}
      */
     public void validateForgotPasswordFields(ForgotPassword forgotPassword, String email) {
-        final ForgotPassword forgotPasswordWithEmail = ForgotPassword.builder()
+        MiddlewareValidation.validate(ForgotPassword.builder()
                 .email(email)
                 .link(forgotPassword.getLink())
-                .build();
-        
-        MiddlewareValidation.validate(forgotPasswordWithEmail);
+                .build());
     }
 }
