@@ -2,6 +2,7 @@ package com.rccl.middleware.guest.impl.password;
 
 import akka.NotUsed;
 import akka.japi.Pair;
+import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -25,6 +26,7 @@ import com.rccl.middleware.saviynt.api.SaviyntGuest;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
+import com.rccl.ops.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import play.Configuration;
 
@@ -48,6 +50,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private final PersistentEntityRegistry persistentEntityRegistry;
     
+    private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
+    
     @Inject
     public GuestAccountPasswordServiceImpl(SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
@@ -67,6 +71,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     public HeaderServiceCall<ForgotPassword, NotUsed> forgotPassword(String email) {
         return (requestHeader, request) -> {
             
+            LOGGER.info("Processing forgot-password request for email : " + email);
+            
             guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
             
             SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().user(email).build();
@@ -77,6 +83,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     .getGuestAccount("email", Optional.of(email), Optional.empty())
                     .invoke()
                     .exceptionally(throwable -> {
+                        LOGGER.error("Error occurred while fetching guest account details for email : " + email);
                         Throwable cause = throwable.getCause();
                         if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
                                 || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
@@ -108,6 +115,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         resetPasswordURL.append("?token=");
                         resetPasswordURL.append(userToken);
                         
+                        LOGGER.info("Sending email notification to reset password");
+                        
                         persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
                                 .ask(new EmailNotificationCommand.SendEmailNotification(
                                         EmailNotification.builder()
@@ -126,6 +135,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     @Override
     public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId) {
         return (requestHeader, request) -> {
+            
+            LOGGER.info("processing update-password request");
+            
             guestAccountPasswordValidator.validateAccountPasswordFields(request, vdsId);
             
             final SaviyntGuest savinyntGuest = this.mapAttributesToSaviynt(request, vdsId);
@@ -186,6 +198,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     + "Here's to all the ships on the sea. "
                     + "But the best ships are friendships, so here's to you and me!";
             
+            LOGGER.info("HealthCheck : " + quote);
             return CompletableFuture.completedFuture(new Pair<>(ResponseHeader.OK, quote));
         };
     }
