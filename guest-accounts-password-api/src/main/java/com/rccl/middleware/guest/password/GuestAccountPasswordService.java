@@ -19,6 +19,8 @@ public interface GuestAccountPasswordService extends Service {
     
     String KAFKA_TOPIC_NAME = ConfigFactory.load().getString("kafka.topic.name");
     
+    String SHIP_CODE = ConfigFactory.load().getString("ship.code");
+    
     ServiceCall<ForgotPassword, NotUsed> forgotPassword(String email);
     
     ServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId);

@@ -12,6 +12,7 @@ import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
+import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.hateoas.HATEOASLinks;
 import com.rccl.middleware.common.hateoas.Link;
@@ -41,22 +42,20 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
     private static final String PASSWORD_SERVICE_LINKS = "account-password";
-    
+    private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
-    
     private final List<Link> passwordServiceLinks;
-    
+    private final AemService aemService;
     private final SaviyntService saviyntService;
-    
     private final PersistentEntityRegistry persistentEntityRegistry;
     
-    private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
-    
     @Inject
-    public GuestAccountPasswordServiceImpl(SaviyntService saviyntService,
+    public GuestAccountPasswordServiceImpl(AemService aemService,
+                                           SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            Configuration configuration,
                                            PersistentEntityRegistry persistentEntityRegistry) {
+        this.aemService = aemService;
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         
@@ -77,13 +76,20 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().user(email).build();
             
-            // Invoke Saviynt getUser to get the guest information then combine it
-            // with Savyint getResetPasswordLink invocation.
+            CompletionStage<JsonNode> aemEmailTemplateFuture = aemService
+                    .getResetPasswordEmail(GuestAccountPasswordService.SHIP_CODE).invoke()
+                    .exceptionally(throwable -> {
+                        LOGGER.error("Error occurred while retrieving AEM email template.");
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    });
+            
+            // Invoke Saviynt getUser to get the guest information then combine it with AEM Email template call,
+            // then combine with Savyint getResetPasswordLink invocation.
             CompletionStage<JsonNode> getGuestAccountFuture = saviyntService
                     .getGuestAccount("email", Optional.of(email), Optional.empty())
                     .invoke()
                     .exceptionally(throwable -> {
-                        LOGGER.error("Error occurred while fetching guest account details for email : " + email);
+                        LOGGER.error("Error occurred while retrieving guest account details for email : " + email);
                         Throwable cause = throwable.getCause();
                         if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
                                 || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
@@ -95,6 +101,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         }
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    }).thenCombineAsync(aemEmailTemplateFuture, (saviyntResponse, aemResponse) -> {
+                        ObjectNode combinedResponse = saviyntResponse.deepCopy();
+                        combinedResponse.set("emailResponse", aemResponse);
+                        
+                        return combinedResponse;
                     });
             
             return saviyntService.retrieveUserToken()
@@ -109,7 +120,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     })
                     .thenCombineAsync(getGuestAccountFuture, (userTokenJsonNode, getGuestAccountJsonNode) -> {
                         String userToken = userTokenJsonNode.get("TOKEN").asText();
-                        String guestName = getGuestAccountJsonNode.get("Attributes").get("firstname").asText();
                         
                         StringBuilder resetPasswordURL = new StringBuilder(request.getLink());
                         resetPasswordURL.append("?token=");
@@ -123,7 +133,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                                 .recipient(email)
                                                 .sender("notifications@rccl.com")
                                                 .subject("Reset your My Cruises password")
-                                                .content(this.composeDummyEmailContent(guestName, email, resetPasswordURL.toString()))
+                                                .content(this.composeEmailContent(getGuestAccountJsonNode, resetPasswordURL.toString()))
                                                 .build()
                                 ));
                         
@@ -219,21 +229,22 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     /**
-     * Composes a hard-coded email body to temporarily fill up the email JSON message.
+     * Replaces the email content variables that needs to be replaced with the proper guest attributes.
      *
-     * @param name  Saviynt account's first name
-     * @param email Saviynt account's email address
-     * @return {@code String}
+     * @param getGuestJsonResponse combined Saviynt getGuest and AEM reset password email responses
+     * @param resetLinkURL         service consumer provided URL appended with TOKEN from Saviynt
+     * @return {@link String} Email Content
      */
-    private String composeDummyEmailContent(String name, String email, String resetLinkURL) {
-        String content = "Hi {0}, \n\n"
-                + "We have received a request to reset your My Cruises password.\n\n"
-                + "Your username: {1}\n\n"
-                + "Click the link below within the next 24 hours to reset your password:\n\n"
-                + "{2}\n\n"
-                + "After following the link, you will be asked to create a new password.\n\n"
-                + "If you didnʼt make this request, please ignore this email.\n\n\n";
+    private String composeEmailContent(JsonNode getGuestJsonResponse, String resetLinkURL) {
+        ObjectNode guestJson = getGuestJsonResponse.deepCopy();
+        String name = guestJson.get("Attributes").get("firstname").asText();
+        String email = guestJson.get("Attributes").get("email").asText();
+        String emailContent = guestJson.findValue("data").get("text").asText();
         
-        return StringUtils.replaceEach(content, new String[]{"{0}", "{1}", "{2}"}, new String[]{name, email, resetLinkURL});
+        return StringUtils.replaceEach(
+                emailContent,
+                new String[]{"<first name>", "<guest username/email>", "<link to reset>"},
+                new String[]{name, email, resetLinkURL}
+        );
     }
 }
