@@ -62,6 +62,7 @@
           <unmanagedServices>
             <cas_native>http://127.0.0.1:9042</cas_native>
             <saviynt>http://10.16.6.134:8090</saviynt>
+            <aem>http://rcldigital-test.adobecqms.net</aem>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
           <cassandraEnabled>false</cassandraEnabled>
