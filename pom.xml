@@ -63,7 +63,7 @@
           <unmanagedServices>
             <cas_native>http://127.0.0.1:9042</cas_native>
             <saviynt>http://dev1.api.rccl.com</saviynt>
-            <aem>http://rcldigital-test.adobecqms.net</aem>
+            <aem>http://tst-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
           <cassandraEnabled>false</cassandraEnabled>
