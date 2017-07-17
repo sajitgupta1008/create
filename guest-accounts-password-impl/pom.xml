@@ -83,6 +83,11 @@
 
     <dependency>
       <groupId>com.rccl.middleware</groupId>
+      <artifactId>aem-lagom-services</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
       <artifactId>saviynt</artifactId>
     </dependency>
 

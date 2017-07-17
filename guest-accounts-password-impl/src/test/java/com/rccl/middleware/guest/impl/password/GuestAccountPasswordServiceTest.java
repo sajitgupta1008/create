@@ -8,13 +8,14 @@ import akka.stream.javadsl.Source;
 import akka.stream.testkit.TestSubscriber;
 import akka.stream.testkit.javadsl.TestSink;
 import akka.testkit.JavaTestKit;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
+import com.rccl.middleware.aem.api.AemService;
+import com.rccl.middleware.aem.api.AemServiceImplStub;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
@@ -57,6 +58,7 @@ public class GuestAccountPasswordServiceTest {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
+                        bind(AemService.class).to(AemServiceImplStub.class),
                         bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
                 ));
         
@@ -116,7 +118,8 @@ public class GuestAccountPasswordServiceTest {
     public void shouldPublishEmailNotificationSuccessfully() {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
-                        bind(SaviyntService.class).to(SaviyntServiceImplStub.class)
+                        bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
+                        bind(AemService.class).to(AemServiceImplStub.class)
                 )).withCassandra(true);
         
         withServer(setup, server -> {
@@ -175,10 +178,10 @@ public class GuestAccountPasswordServiceTest {
         PasswordInformation passwordInformation = PasswordInformation.builder()
                 .password("password!".toCharArray()).token("thisisasampletoken").build();
         
-        HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
+        HeaderServiceCall<PasswordInformation, NotUsed> updatePasswordService =
+                (HeaderServiceCall<PasswordInformation, NotUsed>) guestAccountPasswordService.updatePassword(testVdsId);
         
-        Pair<ResponseHeader, JsonNode> result = updatePasswordService
+        Pair<ResponseHeader, NotUsed> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
@@ -193,10 +196,10 @@ public class GuestAccountPasswordServiceTest {
         PasswordInformation passwordInformation = PasswordInformation.builder()
                 .password("123".toCharArray()).token("thisisasampletoken").build();
         
-        HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
+        HeaderServiceCall<PasswordInformation, NotUsed> updatePasswordService =
+                (HeaderServiceCall<PasswordInformation, NotUsed>) guestAccountPasswordService.updatePassword(testVdsId);
         
-        Pair<ResponseHeader, JsonNode> result = updatePasswordService
+        Pair<ResponseHeader, NotUsed> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
@@ -210,10 +213,10 @@ public class GuestAccountPasswordServiceTest {
         PasswordInformation passwordInformation = PasswordInformation.builder()
                 .password("password!".toCharArray()).token("thisisasampletoken").build();
         
-        HeaderServiceCall<PasswordInformation, JsonNode> updatePasswordService =
-                (HeaderServiceCall<PasswordInformation, JsonNode>) guestAccountPasswordService.updatePassword(testVdsId);
+        HeaderServiceCall<PasswordInformation, NotUsed> updatePasswordService =
+                (HeaderServiceCall<PasswordInformation, NotUsed>) guestAccountPasswordService.updatePassword(testVdsId);
         
-        Pair<ResponseHeader, JsonNode> result = updatePasswordService
+        Pair<ResponseHeader, NotUsed> result = updatePasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, passwordInformation)
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);

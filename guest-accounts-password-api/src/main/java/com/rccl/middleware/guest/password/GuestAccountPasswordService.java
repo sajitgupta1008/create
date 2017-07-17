@@ -1,7 +1,6 @@
 package com.rccl.middleware.guest.password;
 
 import akka.NotUsed;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
@@ -19,9 +18,11 @@ public interface GuestAccountPasswordService extends Service {
     
     String KAFKA_TOPIC_NAME = ConfigFactory.load().getString("kafka.topic.name");
     
+    String SHIP_CODE = ConfigFactory.load().getString("ship.code");
+    
     ServiceCall<ForgotPassword, NotUsed> forgotPassword(String email);
     
-    ServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId);
+    ServiceCall<PasswordInformation, NotUsed> updatePassword(String vdsId);
     
     Topic<EmailNotification> emailNotificationTopic();
     
