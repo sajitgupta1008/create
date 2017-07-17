@@ -4,7 +4,6 @@ import akka.NotUsed;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
@@ -27,7 +26,6 @@ import com.rccl.middleware.saviynt.api.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import com.rccl.ops.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
-import play.Configuration;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -35,8 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordService {
-    
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
     
@@ -52,7 +48,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     public GuestAccountPasswordServiceImpl(AemService aemService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
-                                           Configuration configuration,
                                            PersistentEntityRegistry persistentEntityRegistry) {
         this.aemService = aemService;
         this.saviyntService = saviyntService;
@@ -114,7 +109,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
-                    .thenCombineAsync(getGuestAccountFuture, (userTokenJsonNode, getGuestAccountJsonNode) -> {
+                    .thenCombineAsync(getGuestAccountFuture, (userTokenJsonNode, getUserAndAemCombinedResponse) -> {
                         String userToken = userTokenJsonNode.get("TOKEN").asText();
                         
                         StringBuilder resetPasswordURL = new StringBuilder(request.getLink());
@@ -129,7 +124,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                                 .recipient(email)
                                                 .sender("notifications@rccl.com")
                                                 .subject("Reset your My Cruises password")
-                                                .content(this.composeEmailContent(getGuestAccountJsonNode, resetPasswordURL.toString()))
+                                                .content(this.composeEmailContent(getUserAndAemCombinedResponse, resetPasswordURL.toString()))
                                                 .build()
                                 ));
                         
@@ -219,17 +214,17 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     /**
-     * Replaces the email content variables that needs to be replaced with the proper guest attributes.
+     * Replaces the email content variables with the proper guest attributes.
      *
-     * @param getGuestJsonResponse combined Saviynt getGuest and AEM reset password email responses
-     * @param resetLinkURL         service consumer provided URL appended with TOKEN from Saviynt
+     * @param getUserAndAemCombinedResponse combined Saviynt getGuest and AEM reset password email responses
+     * @param resetLinkURL                  service consumer provided URL appended with TOKEN from Saviynt
      * @return {@link String} Email Content
      */
-    private String composeEmailContent(JsonNode getGuestJsonResponse, String resetLinkURL) {
-        ObjectNode guestJson = getGuestJsonResponse.deepCopy();
+    private String composeEmailContent(JsonNode getUserAndAemCombinedResponse, String resetLinkURL) {
+        ObjectNode guestJson = getUserAndAemCombinedResponse.deepCopy();
         String name = guestJson.get("Attributes").get("firstname").asText();
         String email = guestJson.get("Attributes").get("email").asText();
-        String emailContent = guestJson.findValue("data").get("text").asText();
+        String emailContent = guestJson.findValue("data").get("text").asText(); // this is coming from "emailResponse"
         
         return StringUtils.replaceEach(
                 emailContent,
