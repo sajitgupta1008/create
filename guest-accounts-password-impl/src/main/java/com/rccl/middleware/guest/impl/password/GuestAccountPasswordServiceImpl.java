@@ -14,8 +14,6 @@ import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
-import com.rccl.middleware.common.hateoas.HATEOASLinks;
-import com.rccl.middleware.common.hateoas.Link;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
@@ -32,7 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import play.Configuration;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -41,12 +38,14 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
-    private static final String PASSWORD_SERVICE_LINKS = "account-password";
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
+    
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
-    private final List<Link> passwordServiceLinks;
+    
     private final AemService aemService;
+    
     private final SaviyntService saviyntService;
+    
     private final PersistentEntityRegistry persistentEntityRegistry;
     
     @Inject
@@ -61,9 +60,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         
         this.persistentEntityRegistry = persistentEntityRegistry;
         persistentEntityRegistry.register(EmailNotificationEntity.class);
-        
-        HATEOASLinks hateoasLinks = new HATEOASLinks(configuration);
-        this.passwordServiceLinks = hateoasLinks.getLinks(PASSWORD_SERVICE_LINKS);
     }
     
     @Override
@@ -143,7 +139,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword(String vdsId) {
+    public HeaderServiceCall<PasswordInformation, NotUsed> updatePassword(String vdsId) {
         return (requestHeader, request) -> {
             
             LOGGER.info("processing update-password request");
@@ -171,13 +167,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), exception);
                     })
-                    .thenApply(response -> {
-                        ObjectNode objectNode = OBJECT_MAPPER.createObjectNode();
-                        this.passwordServiceLinks.forEach(link -> link.substituteArguments(vdsId));
-                        objectNode.putPOJO("_links", this.passwordServiceLinks);
-                        
-                        return new Pair<>(ResponseHeader.OK.withStatus(200), objectNode);
-                    });
+                    .thenApply(response -> new Pair<>(ResponseHeader.OK.withStatus(200), NotUsed.getInstance()));
         };
     }
     
