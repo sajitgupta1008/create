@@ -119,7 +119,8 @@ public class GuestAccountPasswordServiceTest {
     public void shouldPublishEmailNotificationSuccessfully() {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
-                        bind(SaviyntService.class).to(SaviyntServiceImplStub.class)
+                        bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
+                        bind(AemService.class).to(AemServiceImplStub.class)
                 )).withCassandra(true);
         
         withServer(setup, server -> {
