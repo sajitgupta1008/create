@@ -15,6 +15,8 @@ import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver;
 import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
+import com.rccl.middleware.aem.api.AemService;
+import com.rccl.middleware.aem.api.AemServiceImplStub;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
@@ -57,6 +59,7 @@ public class GuestAccountPasswordServiceTest {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
+                        bind(AemService.class).to(AemServiceImplStub.class),
                         bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
                 ));
         
