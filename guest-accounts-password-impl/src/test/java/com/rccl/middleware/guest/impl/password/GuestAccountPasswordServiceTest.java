@@ -176,7 +176,7 @@ public class GuestAccountPasswordServiceTest {
     public void shouldUpdatePasswordSuccessfully() throws Exception {
         String testVdsId = "G1234567";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .password("password!".toCharArray()).token("thisisasampletoken").build();
+                .password("password1".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, NotUsed> updatePasswordService =
                 (HeaderServiceCall<PasswordInformation, NotUsed>) guestAccountPasswordService.updatePassword(testVdsId);
@@ -211,7 +211,7 @@ public class GuestAccountPasswordServiceTest {
     public void shouldNotUpdatePasswordForNonExistingUser() throws Exception {
         String testVdsId = "G2342423";
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .password("password!".toCharArray()).token("thisisasampletoken").build();
+                .password("password1".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, NotUsed> updatePasswordService =
                 (HeaderServiceCall<PasswordInformation, NotUsed>) guestAccountPasswordService.updatePassword(testVdsId);
