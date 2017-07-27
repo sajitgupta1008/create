@@ -91,6 +91,11 @@
       <artifactId>saviynt</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>forgerock</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
