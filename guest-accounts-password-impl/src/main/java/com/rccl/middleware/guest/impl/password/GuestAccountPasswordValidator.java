@@ -5,24 +5,24 @@ import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import org.apache.commons.lang3.StringUtils;
 
 public class GuestAccountPasswordValidator {
     
     /**
      * Validate the given {@link PasswordInformation}
      * <p>
-     * If the attribute is invalid, an unhandled {@link MiddlewareValidationException} is thrown. Otherwise,
+     * If an attribute is invalid, an unhandled {@link MiddlewareValidationException} is thrown. Otherwise,
      * nothing happens.
      *
      * @param passwordInformation {@link PasswordInformation}
-     * @param vdsId               {@code String}
      */
-    public void validateAccountPasswordFields(PasswordInformation passwordInformation, String vdsId) {
-        MiddlewareValidation.validate(PasswordInformation.builder()
-                .vdsId(vdsId)
-                .token(passwordInformation.getToken())
-                .password(passwordInformation.getPassword())
-                .build());
+    public void validateAccountPasswordFields(PasswordInformation passwordInformation) {
+        if (StringUtils.isNotBlank(passwordInformation.getToken())) {
+            MiddlewareValidation.validateWithGroups(passwordInformation, PasswordInformation.TokenChecks.class);
+        } else {
+            MiddlewareValidation.validateWithGroups(passwordInformation, PasswordInformation.QuestionAnswerChecks.class);
+        }
     }
     
     /**
