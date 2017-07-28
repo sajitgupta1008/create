@@ -101,9 +101,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                     if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
                                             || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                         throw new GuestNotFoundException();
-                                    }
-                                    
-                                    if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                                    } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                         throw new InvalidEmailException();
                                     }
                                     
@@ -151,13 +149,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             // populate user with email address|VDS ID and token if VDS ID is specified in the request,
             // otherwise, do the WebShopper approach with shopperId|shopperUserName|firstName|lastName
             if (StringUtils.isNotBlank(request.getVdsId())) {
+                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.NewUserChecks.class);
+                
                 saviyntUserToken = SaviyntUserToken.builder()
                         .user(request.getEmail() + "|" + request.getVdsId())
                         .token(request.getToken())
                         .build();
-                MiddlewareValidation.validateWithGroups(saviyntUserToken, ForgotPasswordToken.NewUserChecks.class);
                 
             } else {
+                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.WebShopperChecks.class);
                 saviyntUserToken = SaviyntUserToken.builder()
                         .user(request.getWebShopperId() + "|"
                                 + request.getWebShopperUserName() + "|"
@@ -165,11 +165,18 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 + request.getLastName())
                         .token(request.getToken())
                         .build();
-                MiddlewareValidation.validateWithGroups(saviyntUserToken, ForgotPasswordToken.WebShopperChecks.class);
             }
             
             return saviyntService.validateUserToken().invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
+                        Throwable cause = throwable.getCause();
+                        
+                        if (cause instanceof SaviyntExceptionFactory.InvalidUserTokenException) {
+                            throw new InvalidPasswordTokenException();
+                        } else if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                            throw new GuestNotFoundException();
+                        }
+                        
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
                     .thenApply(notUsed ->
@@ -194,13 +201,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
                                 throw new GuestNotFoundException();
-                            }
-                            
-                            if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
-                            }
-                            
-                            if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
                                 throw new InvalidPasswordException();
                             }
                             
@@ -220,13 +223,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
                                 throw new GuestNotFoundException();
-                            }
-                            
-                            if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
-                            }
-                            
-                            if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
                                 throw new InvalidPasswordException();
                             }
                             

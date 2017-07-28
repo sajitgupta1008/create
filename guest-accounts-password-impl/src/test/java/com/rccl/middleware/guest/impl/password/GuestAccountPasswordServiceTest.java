@@ -22,6 +22,7 @@ import com.rccl.middleware.forgerock.api.ForgeRockService;
 import com.rccl.middleware.forgerock.api.ForgeRockServiceImplStub;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
+import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.saviynt.api.SaviyntService;
@@ -87,7 +88,7 @@ public class GuestAccountPasswordServiceTest {
     }
     
     @Test
-    public void shouldPostForgotPasswordSuccessfully() throws Exception {
+    public void testSuccessfulPostForgotPassword() throws Exception {
         HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
                 (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("successful@domain.com");
         
@@ -100,7 +101,7 @@ public class GuestAccountPasswordServiceTest {
     }
     
     @Test
-    public void shouldProcessEmailNotificationEntity() {
+    public void testEmailNotificationEntity() {
         EmailNotification emailNotificationSample = EmailNotification.builder()
                 .recipient("successful@domain.com")
                 .sender("sender@email.com")
@@ -121,7 +122,7 @@ public class GuestAccountPasswordServiceTest {
     }
     
     @Test
-    public void shouldPublishEmailNotificationSuccessfully() {
+    public void testSuccessfulEmailNotificationPublishing() {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
                         bind(ForgeRockService.class).to(ForgeRockServiceImplStub.class),
@@ -153,7 +154,7 @@ public class GuestAccountPasswordServiceTest {
     }
     
     @Test(expected = MiddlewareValidationException.class)
-    public void shouldFailForgottenPasswordForInvalidEmail() throws Exception {
+    public void testFailureForgotPasswordForInvalidEmail() throws Exception {
         HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
                 (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("jsmith@rccl");
         
@@ -177,6 +178,79 @@ public class GuestAccountPasswordServiceTest {
                 .get(5, TimeUnit.SECONDS);
         
         assertNotNull("The test should throw ExecutionException.", result.second());
+    }
+    
+    @Test
+    public void testSuccessfulVDSForgotPasswordTokenValidation() throws Exception {
+        ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
+                .email("successful@domain.com")
+                .vdsId("G1234567")
+                .token("imaginethisisatoken")
+                .build();
+        
+        HeaderServiceCall<ForgotPasswordToken, NotUsed> tokenValidationService =
+                (HeaderServiceCall<ForgotPasswordToken, NotUsed>) guestAccountPasswordService.validateForgotPasswordToken();
+        
+        Pair<ResponseHeader, NotUsed> result = tokenValidationService
+                .invokeWithHeaders(RequestHeader.DEFAULT, forgotPasswordToken)
+                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+        
+        assertTrue("Response status must be 200.", result.first().status() == 200);
+    }
+    
+    @Test
+    public void testSuccessfulWebShopperForgotPasswordTokenValidation() throws Exception {
+        ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
+                .webShopperId("12345678")
+                .webShopperUserName("shopperusername")
+                .firstName("firstName")
+                .lastName("lastName")
+                .token("imaginethisisatoken")
+                .build();
+        
+        HeaderServiceCall<ForgotPasswordToken, NotUsed> tokenValidationService =
+                (HeaderServiceCall<ForgotPasswordToken, NotUsed>) guestAccountPasswordService.validateForgotPasswordToken();
+        
+        Pair<ResponseHeader, NotUsed> result = tokenValidationService
+                .invokeWithHeaders(RequestHeader.DEFAULT, forgotPasswordToken)
+                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+        
+        assertTrue("Response status must be 200.", result.first().status() == 200);
+    }
+    
+    @Test(expected = MiddlewareValidationException.class)
+    public void testFailureValidationOfForgotPasswordTokenValidation() throws Exception {
+        ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
+                .email("@domain.com")
+                .vdsId("G")
+                .token("imaginethisisatoken")
+                .build();
+        
+        HeaderServiceCall<ForgotPasswordToken, NotUsed> tokenValidationService =
+                (HeaderServiceCall<ForgotPasswordToken, NotUsed>) guestAccountPasswordService.validateForgotPasswordToken();
+        
+        tokenValidationService.invokeWithHeaders(RequestHeader.DEFAULT, forgotPasswordToken)
+                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+        
+        assertTrue("Must return a MiddlewareValidationException instead.", false);
+        
+    }
+    
+    @Test(expected = SaviyntExceptionFactory.InvalidUserTokenException.class)
+    public void testFailureForgotPasswordTokenValidation() throws Exception {
+        ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
+                .email("failure@domain.com")
+                .vdsId("G1111111")
+                .token("imaginethisisatoken")
+                .build();
+        
+        HeaderServiceCall<ForgotPasswordToken, NotUsed> tokenValidationService =
+                (HeaderServiceCall<ForgotPasswordToken, NotUsed>) guestAccountPasswordService.validateForgotPasswordToken();
+        
+        tokenValidationService.invokeWithHeaders(RequestHeader.DEFAULT, forgotPasswordToken)
+                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+        
+        assertTrue("Must return a Saviynt exception instead.", false);
     }
     
     @Test
