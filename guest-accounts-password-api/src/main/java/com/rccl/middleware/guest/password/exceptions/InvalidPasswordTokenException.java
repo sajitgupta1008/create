@@ -7,6 +7,6 @@ public class InvalidPasswordTokenException extends MiddlewareTransportException 
     
     public InvalidPasswordTokenException() {
         super(TransportErrorCode.fromHttp(422), "Token validation failed. "
-                + "The token specified is either invalid or is already expired.");
+                + "The token specified is either invalid or has already expired.");
     }
 }
