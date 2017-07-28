@@ -14,12 +14,14 @@ import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
+import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.forgerock.api.ForgeRockCredentials;
 import com.rccl.middleware.forgerock.api.ForgeRockService;
 import com.rccl.middleware.forgerock.api.LoginStatusEnum;
 import com.rccl.middleware.forgerock.api.exceptions.ForgeRockExceptionFactory;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
+import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestAuthenticationException;
@@ -29,6 +31,7 @@ import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntUpdatePassword;
+import com.rccl.middleware.saviynt.api.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import com.rccl.ops.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -135,6 +138,43 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                     return Pair.create(ResponseHeader.OK.withStatus(200), NotUsed.getInstance());
                                 });
                     });
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<ForgotPasswordToken, NotUsed> validateForgotPasswordToken() {
+        return (requestHeader, request) -> {
+            LOGGER.info("Processing forgot password token validation...");
+            
+            SaviyntUserToken saviyntUserToken;
+            
+            // populate user with email address|VDS ID and token if VDS ID is specified in the request,
+            // otherwise, do the WebShopper approach with shopperId|shopperUserName|firstName|lastName
+            if (StringUtils.isNotBlank(request.getVdsId())) {
+                saviyntUserToken = SaviyntUserToken.builder()
+                        .user(request.getEmail() + "|" + request.getVdsId())
+                        .token(request.getToken())
+                        .build();
+                MiddlewareValidation.validateWithGroups(saviyntUserToken, ForgotPasswordToken.NewUserChecks.class);
+                
+            } else {
+                saviyntUserToken = SaviyntUserToken.builder()
+                        .user(request.getWebShopperId() + "|"
+                                + request.getWebShopperUserName() + "|"
+                                + request.getFirstName() + "|"
+                                + request.getLastName())
+                        .token(request.getToken())
+                        .build();
+                MiddlewareValidation.validateWithGroups(saviyntUserToken, ForgotPasswordToken.WebShopperChecks.class);
+            }
+            
+            return saviyntService.validateUserToken().invoke(saviyntUserToken)
+                    .exceptionally(throwable -> {
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    })
+                    .thenApply(notUsed ->
+                            Pair.create(ResponseHeader.OK, NotUsed.getInstance())
+                    );
         };
     }
     
