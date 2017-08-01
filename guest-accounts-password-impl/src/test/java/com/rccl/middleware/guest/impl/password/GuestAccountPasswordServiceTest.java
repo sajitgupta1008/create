@@ -83,7 +83,7 @@ public class GuestAccountPasswordServiceTest {
     @Test
     public void shouldPostForgotPasswordSuccessfully() throws Exception {
         HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
-                (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("abc.xyz@domain123.com");
+                (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("successful@domain.com");
         
         Pair<ResponseHeader, NotUsed> result = forgotPasswordService
                 .invokeWithHeaders(RequestHeader.DEFAULT, createSampleForgotPassword())
@@ -131,7 +131,7 @@ public class GuestAccountPasswordServiceTest {
                             TestSink.probe(server.system()), server.materializer()
                     );
             
-            client.forgotPassword("abc.xyz@domain123.com")
+            client.forgotPassword("successful@domain.com")
                     .invoke(createSampleForgotPassword())
                     .toCompletableFuture()
                     .get(10, TimeUnit.SECONDS);

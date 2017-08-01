@@ -34,7 +34,7 @@ public interface GuestAccountPasswordService extends Service {
                 restCall(POST, "/v1/guestAccounts/:email/forgotPassword", this::forgotPassword),
                 restCall(PUT, "/v1/guestAccounts/:vdsId/password", this::updatePassword),
                 restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
-                .publishing(
+                .withTopics(
                         topic(KAFKA_TOPIC_NAME, this::emailNotificationTopic)
                 )
                 .withAutoAcl(true);

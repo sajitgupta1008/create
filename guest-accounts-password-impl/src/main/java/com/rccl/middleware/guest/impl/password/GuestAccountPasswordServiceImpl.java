@@ -99,7 +99,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         return combinedResponse;
                     });
             
-            return saviyntService.retrieveUserToken()
+            return saviyntService.getUserToken()
                     .invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
