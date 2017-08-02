@@ -365,6 +365,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .securityQuestion(passwordInformation.getSecurityQuestion())
                 .securityAnswer(passwordInformation.getSecurityAnswer())
                 .password(Arrays.toString(passwordInformation.getPassword()))
+                .token(passwordInformation.getToken())
                 .build();
     }
     
