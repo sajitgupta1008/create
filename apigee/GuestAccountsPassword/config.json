@@ -1,0 +1,46 @@
+{
+  "configurations": [
+    {
+      "name": "dev",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "cloud-test",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-test",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "cloud-stage",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-stage",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "cloud-production",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-allure",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    }
+  ]
+}
