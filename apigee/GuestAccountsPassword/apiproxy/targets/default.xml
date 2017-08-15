@@ -22,6 +22,6 @@
                 <IsFallback>true</IsFallback>
             </Server>
         </LoadBalancer>
-        <URL>/guest-accounts-password/v1/{path}</URL>
+        <Path>/guest-accounts-password/v1/{path}</Path>
     </HTTPTargetConnection>
 </TargetEndpoint>
