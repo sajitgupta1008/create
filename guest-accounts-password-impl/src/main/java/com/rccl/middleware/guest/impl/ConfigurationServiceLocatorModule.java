@@ -1,7 +1,7 @@
 package com.rccl.middleware.guest.impl;
 
 import com.google.inject.AbstractModule;
-import com.lightbend.lagom.javadsl.api.ConfigurationServiceLocator;
+import com.lightbend.lagom.javadsl.client.ConfigurationServiceLocator;
 import com.lightbend.lagom.javadsl.api.ServiceLocator;
 import play.Configuration;
 import play.Environment;
