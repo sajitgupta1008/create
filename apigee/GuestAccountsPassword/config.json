@@ -41,6 +41,12 @@
       "policies": [],
       "proxies": [],
       "targets": []
+    },
+    {
+      "name": "ship-symphony",
+      "policies": [],
+      "proxies": [],
+      "targets": []
     }
   ]
 }
