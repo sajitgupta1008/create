@@ -1,0 +1,97 @@
+{
+  "volumes": null,
+  "id": "/dev/middleware/guest-accounts/guest-accounts-password-v01",
+  "cmd": null,
+  "args": null,
+  "user": null,
+  "env": {
+    "SHIP_CODE": "AL",
+    "KAFKA_TOPIC_NAME": "notifications_email_dev_v1",
+    "CAS_CONTACT_POINT_THREE": "10.16.6.162",
+    "AEM": "http://stg-rcldigital.aem.rccl.com",
+    "CAS_CONTACT_POINT_ONE": "10.16.4.106",
+    "CASSANDRA_REPLICATION_FACTOR": "3",
+    "CAS_NATIVE_URL": "tcp://10.16.6.162:8042/cas_native",
+    "CASSANDRA_USERNAME": {
+      "secret": "secret29"
+    },
+    "CASSANDRA_REPLICATION_STRATEGY": "SimpleStrategy",
+    "KAFKA_URL": "10.16.5.94:9092, 10.16.5.91:9092",
+    "SAVIYNT": "http://dev1-int.api.rccl.com",
+    "CASSANDRA_PASSWORD": {
+      "secret": "secret30"
+    },
+    "CASSANDRA_PORT": "8042",
+    "CASSANDRA_KEYSPACE": "guest_accounts_password",
+    "HTTP_PORT": "9002"
+  },
+  "instances": 2,
+  "cpus": 0.5,
+  "mem": 1500,
+  "disk": 0,
+  "gpus": 0,
+  "executor": null,
+  "constraints": null,
+  "fetch": null,
+  "storeUrls": null,
+  "backoffSeconds": 1,
+  "backoffFactor": 1.15,
+  "maxLaunchDelaySeconds": 3600,
+  "container": {
+    "docker": {
+      "image": "rhldcmesboot711.na.rccl.com:5000/guest-accounts-password:v01",
+      "forcePullImage": true,
+      "privileged": false,
+      "portMappings": [{
+        "containerPort": 9010,
+        "protocol": "tcp",
+        "name": "guest-accounts-password-lb",
+        "servicePort": 0
+      }],
+      "network": "BRIDGE"
+    }
+  },
+  "healthChecks": [
+    {
+      "protocol": "HTTP",
+      "path": "/v1/guestAccounts/health",
+      "gracePeriodSeconds": 300,
+      "intervalSeconds": 60,
+      "timeoutSeconds": 20,
+      "maxConsecutiveFailures": 3,
+      "ignoreHttp1xx": false
+    }
+  ],
+  "readinessChecks": null,
+  "dependencies": null,
+  "upgradeStrategy": {
+    "minimumHealthCapacity": 0,
+    "maximumOverCapacity": 0.5
+  },
+  "labels": {
+    "DCOS_SERVICE_SCHEME": "http",
+    "HAPROXY_GROUP": "external",
+    "DCOS_guest-accounts-password": "guest-accounts-password",
+    "DCOS_SERVICE_PORT_INDEX": "0",
+    "HAPROXY_0_HTTP_BACKEND_PROXYPASS_PATH": "/guest-accounts-password/v01/",
+    "HAPROXY_0_PATH": "/guest-accounts-password/v01/",
+    "HAPROXY_0_VHOST": "10.16.4.8,dev1.mesos.rccl.com"
+  },
+  "acceptedResourceRoles": null,
+  "residency": null,
+  "secrets": {
+    "secret29": {
+      "source": "guest_accounts_password_user"
+    },
+    "secret30": {
+      "source": "guest_accounts_password_password"
+    }
+  },
+  "taskKillGracePeriodSeconds": null,
+  "portDefinitions": [{
+    "port": 0,
+    "protocol": "tcp",
+    "labels": {}
+  }],
+  "requirePorts": false
+}
