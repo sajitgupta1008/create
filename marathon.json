@@ -23,7 +23,7 @@
     },
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
-    "HTTP_PORT": "9002"
+    "HTTP_PORT": "9022"
   },
   "instances": 2,
   "cpus": 0.5,
@@ -43,7 +43,7 @@
       "forcePullImage": true,
       "privileged": false,
       "portMappings": [{
-        "containerPort": 9010,
+        "containerPort": 9022,
         "protocol": "tcp",
         "name": "guest-accounts-password-lb",
         "servicePort": 0
