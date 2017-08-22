@@ -65,7 +65,7 @@
             <cas_native>http://127.0.0.1:9042</cas_native>
             <saviynt>http://dev1.api.rccl.com</saviynt>
             <forgerock>http://dev1.api.rccl.com</forgerock>
-            <aem>http://tst-rcldigital.aem.rccl.com</aem>
+            <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
           <cassandraEnabled>false</cassandraEnabled>
