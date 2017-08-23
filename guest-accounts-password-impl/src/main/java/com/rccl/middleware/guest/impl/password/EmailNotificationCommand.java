@@ -12,7 +12,8 @@ public interface EmailNotificationCommand extends Jsonable {
     
     @Builder
     @Value
-    final class SendEmailNotification implements EmailNotificationCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
+    final class SendEmailNotification implements EmailNotificationCommand,
+            CompressedJsonable, PersistentEntity.ReplyType<Done> {
         
         final EmailNotification emailNotification;
     }

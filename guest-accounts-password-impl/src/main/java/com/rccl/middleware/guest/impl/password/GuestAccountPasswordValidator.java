@@ -21,7 +21,8 @@ public class GuestAccountPasswordValidator {
         if (StringUtils.isNotBlank(passwordInformation.getToken())) {
             MiddlewareValidation.validateWithGroups(passwordInformation, PasswordInformation.TokenChecks.class);
         } else {
-            MiddlewareValidation.validateWithGroups(passwordInformation, PasswordInformation.QuestionAnswerChecks.class);
+            MiddlewareValidation.validateWithGroups(passwordInformation,
+                    PasswordInformation.QuestionAnswerChecks.class);
         }
     }
     
