@@ -31,9 +31,9 @@ public interface GuestAccountPasswordService extends Service {
     @Override
     default Descriptor descriptor() {
         return named("guestAccountsPassword").withCalls(
-                restCall(POST, "/v1/guestAccounts/:email/forgotPassword", this::forgotPassword),
-                restCall(PUT, "/v1/guestAccounts/:vdsId/password", this::updatePassword),
-                restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
+                restCall(POST, "/guestAccounts/:email/forgotPassword", this::forgotPassword),
+                restCall(PUT, "/guestAccounts/:vdsId/password", this::updatePassword),
+                restCall(GET, "/guestAccounts/health", this::healthCheck))
                 .withTopics(
                         topic(KAFKA_TOPIC_NAME, this::emailNotificationTopic)
                 )
