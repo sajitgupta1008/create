@@ -169,7 +169,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 return saviyntService.updateAccountPasswordWithToken().invoke(savinyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
-                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
+                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                    || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
