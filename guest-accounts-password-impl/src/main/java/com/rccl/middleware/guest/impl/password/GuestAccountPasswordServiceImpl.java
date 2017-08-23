@@ -299,7 +299,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     /**
-     * Prepares and executes a persistent entity request for a VDS User version of forgot password email.
+     * Prepares and executes an persistent entity event request for a VDS User version of forgot password email.
      *
      * @param status  {@link AccountStatus} Saviynt response object from AccountStatus service call.
      * @param request {@link ForgotPassword} from forgotPassword service call.
@@ -365,7 +365,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     /**
-     * Prepares and executes a persistent entity request for a WebShopper User version of forgot password email.
+     * Prepares and executes a persistent entity event request for a WebShopper User version of forgot password email.
      *
      * @param request {@link ForgotPassword} from forgotPassword service call.
      * @param email   the email address of the user.
