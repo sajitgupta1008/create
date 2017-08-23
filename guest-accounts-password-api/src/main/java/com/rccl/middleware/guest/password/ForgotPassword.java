@@ -14,6 +14,7 @@ import javax.validation.constraints.Size;
 public class ForgotPassword {
     
     @NotEmpty(message = "An email is required.")
+    
     @Size(min = 5, max = 100, message = "The email can only have up to 100 characters.")
     @Email(regexp = ValidatorConstants.EMAIL_REGEXP, message = "The email is invalidly formatted.")
     String email;

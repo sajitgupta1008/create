@@ -118,6 +118,11 @@
       <artifactId>cinnamon-chmetrics-jvm-metrics_2.11</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>forgerock</artifactId>
+    </dependency>
+
   </dependencies>
 
   <profiles>

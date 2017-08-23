@@ -8,7 +8,8 @@ import com.rccl.middleware.guest.password.EmailNotification;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public class EmailNotificationEntity extends PersistentEntity<EmailNotificationCommand, EmailNotificationEvent, EmailNotificationState> {
+public class EmailNotificationEntity extends
+        PersistentEntity<EmailNotificationCommand, EmailNotificationEvent, EmailNotificationState> {
     
     @Override
     @SuppressWarnings("unchecked")
