@@ -2,7 +2,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>com.rccl.middleware.guest</groupId>
     <artifactId>guest-accounts-password</artifactId>
@@ -92,14 +94,78 @@
     </dependency>
 
     <dependency>
+      <groupId>com.lightbend.cinnamon</groupId>
+      <artifactId>cinnamon-chmetrics-statsd-reporter_2.11</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lightbend.cinnamon</groupId>
+      <artifactId>cinnamon-lagom_2.11</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lightbend.cinnamon</groupId>
+      <artifactId>cinnamon-agent</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lightbend.cinnamon</groupId>
+      <artifactId>cinnamon-opentracing-jaeger_2.11</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lightbend.cinnamon</groupId>
+      <artifactId>cinnamon-chmetrics-jvm-metrics_2.11</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.rccl.middleware</groupId>
       <artifactId>forgerock</artifactId>
     </dependency>
 
   </dependencies>
 
+  <profiles>
+
+    <profile>
+      <id>local</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <dockerHost>unix:///var/run/docker.sock</dockerHost>
+        <dockerRegistryCertPath>/Users/114934/.docker/aws_dev_test.crt</dockerRegistryCertPath>
+        <dockerRegistryURI>rhldcmesboot711.na.rccl.com:5000</dockerRegistryURI>
+        <dcosURI>http://10.135.10.151</dcosURI>
+        <dcosTokenFile>src/main/docker/dcosToken</dcosTokenFile>
+        <dockerFile>Dockerfile</dockerFile>
+        <skipDockerBuild>true</skipDockerBuild>
+        <skipDockerPush>true</skipDockerPush>
+        <ignoreDcosSslCertificateIssue>true</ignoreDcosSslCertificateIssue>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>build</id>
+      <properties>
+        <dockerHost>unix:///var/run/docker.sock</dockerHost>
+        <dockerRegistryCertPath>/Users/114934/.docker/aws_dev_test.crt</dockerRegistryCertPath>
+        <dockerRegistryURI>rhldcmesboot711.na.rccl.com:5000</dockerRegistryURI>
+        <dcosURI>http://10.16.7.225</dcosURI>
+        <dcosTokenFile>src/main/docker/dcosToken</dcosTokenFile>
+        <dockerFile>Dockerfile</dockerFile>
+        <skipDockerBuild>false</skipDockerBuild>
+        <skipDockerPush>false</skipDockerPush>
+        <ignoreDcosSslCertificateIssue>true</ignoreDcosSslCertificateIssue>
+      </properties>
+    </profile>
+
+  </profiles>
+
   <build>
+
     <plugins>
+
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -119,24 +185,86 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.plugin.version}</version>
-        <configuration>
-          <forkCount>3</forkCount>
-          <reuseForks>true</reuseForks>
-          <argLine>-Xmx1024m -Dconfig.file=${project.basedir}/src/test/resources/test-application.conf</argLine>
-        </configuration>
-      </plugin>
-
-      <plugin>
         <groupId>com.lightbend.lagom</groupId>
         <artifactId>lagom-maven-plugin</artifactId>
         <configuration>
           <lagomService>true</lagomService>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>3</forkCount>
+          <reuseForks>true</reuseForks>
+          <argLine>-Xmx1024m -XX:MaxPermSize=256m -Dconfig.file=${basedir}/src/test/resources/test-application.conf</argLine>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>dcos</groupId>
+        <artifactId>dcos-maven-plugin</artifactId>
+        <version>${maven.dcos.plugin.version}</version>
+        <configuration>
+          <dcosUrl>${dcosURI}</dcosUrl>
+          <dcosTokenFile>${dcosTokenFile}</dcosTokenFile>
+          <ignoreSslCertificate>${ignoreDcosSslCertificateIssue}</ignoreSslCertificate>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>deploy</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${maven.docker.plugin.version}</version>
+        <configuration>
+          <skip>${skipDockerBuild}</skip>
+          <logStdout>true</logStdout>
+          <dockerHost>${dockerHost}</dockerHost>
+          <certPath>${dockerRegistryCertPath}</certPath>
+          <useColor>true</useColor>
+          <images>
+            <image>
+              <name>${service.name}</name>
+              <registry>${dockerRegistryURI}</registry>
+              <build>
+                <dockerFile>${dockerFile}</dockerFile>
+                <tags>
+                  <tag>${project.version}</tag>
+                </tags>
+                <assembly>
+                  <mode>dir</mode>
+                  <descriptor>docker-bundle.xml</descriptor>
+                </assembly>
+              </build>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>container-build</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>container-push</id>
+            <goals>
+              <goal>push</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
+
   </build>
 
 </project>
