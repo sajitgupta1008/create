@@ -7,7 +7,6 @@ import akka.japi.Pair;
 import akka.stream.javadsl.Source;
 import akka.stream.testkit.TestSubscriber;
 import akka.stream.testkit.javadsl.TestSink;
-import akka.testkit.JavaTestKit;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
@@ -82,7 +81,7 @@ public class GuestAccountPasswordServiceTest {
             testServer = null;
         }
         
-        JavaTestKit.shutdownActorSystem(system);
+        system.shutdown();
         system = null;
     }
     
@@ -303,7 +302,7 @@ public class GuestAccountPasswordServiceTest {
         assertTrue("This should fail and throw an exception instead.", result == null);
     }
     
-    private final ForgotPassword createSampleForgotPassword() {
+    private ForgotPassword createSampleForgotPassword() {
         return ForgotPassword.builder().link("http://www.rccl.com/forgotPassword").build();
     }
 }
