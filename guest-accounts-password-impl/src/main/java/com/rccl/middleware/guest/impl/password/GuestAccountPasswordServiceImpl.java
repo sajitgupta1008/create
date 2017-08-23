@@ -17,6 +17,8 @@ import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.forgerock.api.ForgeRockService;
 import com.rccl.middleware.forgerock.api.exceptions.ForgeRockExceptionFactory;
+import com.rccl.middleware.forgerock.api.jwt.ForgeRockJWTDecoder;
+import com.rccl.middleware.forgerock.api.jwt.OpenIdTokenInformation;
 import com.rccl.middleware.forgerock.api.requests.ForgeRockCredentials;
 import com.rccl.middleware.forgerock.api.requests.LoginStatusEnum;
 import com.rccl.middleware.guest.password.EmailNotification;
@@ -39,7 +41,6 @@ import com.rccl.ops.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -258,8 +259,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, OBJECT_MAPPER.createObjectNode()));
         }
         ForgeRockCredentials forgeRockCredentials = ForgeRockCredentials.builder()
-                .password(passwordInformation.getPassword())
                 .username(passwordInformation.getEmail())
+                .password(passwordInformation.getPassword())
                 .build();
         
         return forgeRockService.authenticateMobileUser().invoke(forgeRockCredentials)
@@ -276,11 +277,22 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 })
                 .thenApply(mobileTokens -> {
                     ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
-                    jsonResponse.put("accountLoginStatus", LoginStatusEnum.NEW_ACCOUNT_AUTHENTICATED.value());
-                    jsonResponse.put("accessToken", mobileTokens.getAccessToken());
-                    jsonResponse.put("refreshToken", mobileTokens.getRefreshToken());
-                    jsonResponse.put("openIdToken", mobileTokens.getIdToken());
-                    jsonResponse.put("tokenExpiration", mobileTokens.getExpiration());
+                    jsonResponse.put("accountLoginStatus", LoginStatusEnum.NEW_ACCOUNT_AUTHENTICATED.value())
+                            .put("accessToken", mobileTokens.getAccessToken())
+                            .put("refreshToken", mobileTokens.getRefreshToken())
+                            .put("openIdToken", mobileTokens.getIdToken())
+                            .put("tokenExpiration", mobileTokens.getExpiration());
+                    
+                    OpenIdTokenInformation decryptedInfo = ForgeRockJWTDecoder
+                            .decodeJwtToken(mobileTokens.getIdToken(), OpenIdTokenInformation.class);
+                    
+                    if (decryptedInfo != null) {
+                        jsonResponse.put("vdsId", decryptedInfo.getVdsId())
+                                .put("firstName", decryptedInfo.getFirstName())
+                                .put("lastName", decryptedInfo.getLastName())
+                                .put("email", decryptedInfo.getEmail())
+                                .put("birthdate", decryptedInfo.getBirthdate());
+                    }
                     
                     return Pair.create(ResponseHeader.OK, jsonResponse);
                 });
@@ -420,7 +432,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .email(passwordInformation.getEmail())
                 .securityQuestion(passwordInformation.getSecurityQuestion())
                 .securityAnswer(passwordInformation.getSecurityAnswer())
-                .password(Arrays.toString(passwordInformation.getPassword()))
+                .password(new String(passwordInformation.getPassword()))
                 .token(passwordInformation.getToken())
                 .build();
     }
