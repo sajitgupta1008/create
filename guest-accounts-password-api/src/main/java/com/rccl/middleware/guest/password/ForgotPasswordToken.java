@@ -28,7 +28,7 @@ public class ForgotPasswordToken {
     String webShopperId;
     
     @NotEmpty(message = "A WebShopper username is required.", groups = WebShopperChecks.class)
-    String webShopperUserName;
+    String webShopperUsername;
     
     @NotEmpty(message = "A first name is required.", groups = WebShopperChecks.class)
     String firstName;

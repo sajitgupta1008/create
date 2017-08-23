@@ -35,7 +35,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
@@ -167,7 +166,7 @@ public class GuestAccountPasswordServiceTest {
         
     }
     
-    @Test(expected = ExecutionException.class)
+    @Test(expected = SaviyntExceptionFactory.ExistingGuestException.class)
     public void shouldFailForgottenPasswordForNonExistingAccount() throws Exception {
         HeaderServiceCall<ForgotPassword, NotUsed> forgotPasswordService =
                 (HeaderServiceCall<ForgotPassword, NotUsed>) guestAccountPasswordService.forgotPassword("random@email.com");
@@ -202,9 +201,9 @@ public class GuestAccountPasswordServiceTest {
     public void testSuccessfulWebShopperForgotPasswordTokenValidation() throws Exception {
         ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
                 .webShopperId("12345678")
-                .webShopperUserName("shopperusername")
-                .firstName("firstName")
-                .lastName("lastName")
+                .webShopperUsername("username")
+                .firstName("first")
+                .lastName("last")
                 .token("imaginethisisatoken")
                 .build();
         

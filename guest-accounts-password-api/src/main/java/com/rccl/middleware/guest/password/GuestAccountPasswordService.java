@@ -35,7 +35,8 @@ public interface GuestAccountPasswordService extends Service {
     default Descriptor descriptor() {
         return named("guestAccountsPassword").withCalls(
                 restCall(POST, "/v1/guestAccounts/:email/forgotPassword", this::forgotPassword),
-                restCall(POST, "/v1/guestAccounts/forgotPassword/validation", this::validateForgotPasswordToken),
+                restCall(POST, "/v1/guestAccounts/forgotPassword/tokenValidation", 
+                        this::validateForgotPasswordToken),
                 restCall(PUT, "/v1/guestAccounts/password", this::updatePassword),
                 restCall(GET, "/v1/guestAccounts/health", this::healthCheck))
                 .withTopics(

@@ -130,9 +130,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.WebShopperChecks.class);
                 saviyntUserToken = SaviyntUserToken.builder()
                         .user(request.getWebShopperId() + "|"
-                                + request.getWebShopperUserName() + "|"
                                 + request.getFirstName() + "|"
-                                + request.getLastName())
+                                + request.getLastName() + "|"
+                                + request.getWebShopperUsername())
                         .token(request.getToken())
                         .build();
             }
