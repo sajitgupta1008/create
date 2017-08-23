@@ -4,6 +4,7 @@ import akka.NotUsed;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
@@ -13,17 +14,29 @@ import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
+import com.rccl.middleware.common.validation.MiddlewareValidation;
+import com.rccl.middleware.forgerock.api.ForgeRockService;
+import com.rccl.middleware.forgerock.api.exceptions.ForgeRockExceptionFactory;
+import com.rccl.middleware.forgerock.api.jwt.ForgeRockJWTDecoder;
+import com.rccl.middleware.forgerock.api.jwt.OpenIdTokenInformation;
+import com.rccl.middleware.forgerock.api.requests.ForgeRockCredentials;
+import com.rccl.middleware.forgerock.api.requests.LoginStatusEnum;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
+import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.exceptions.GuestAuthenticationException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
-import com.rccl.middleware.saviynt.api.SaviyntGuest;
+import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
-import com.rccl.middleware.saviynt.api.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
+import com.rccl.middleware.saviynt.api.requests.SaviyntUpdatePassword;
+import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
+import com.rccl.middleware.saviynt.api.requests.WebShopperAccount;
+import com.rccl.middleware.saviynt.api.responses.AccountStatus;
 import com.rccl.ops.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,9 +49,13 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
     
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
     
     private final AemService aemService;
+    
+    private final ForgeRockService forgeRockService;
     
     private final SaviyntService saviyntService;
     
@@ -46,10 +63,12 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     @Inject
     public GuestAccountPasswordServiceImpl(AemService aemService,
+                                           ForgeRockService forgeRockService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry) {
         this.aemService = aemService;
+        this.forgeRockService = forgeRockService;
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         
@@ -65,104 +84,133 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
             
-            SaviyntUserToken saviyntUserToken = SaviyntUserToken.builder().user(email).build();
-            
-            CompletionStage<JsonNode> aemEmailTemplateFuture = aemService
-                    .getResetPasswordEmail(GuestAccountPasswordService.SHIP_CODE).invoke()
+            return saviyntService.getAccountStatus(email, "email", "True").invoke()
                     .exceptionally(throwable -> {
-                        LOGGER.error("Error occurred while retrieving AEM email template.");
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-                    });
-            
-            // Invoke Saviynt getUser to get the guest information then combine it with AEM Email template call,
-            // then combine with Savyint getResetPasswordLink invocation.
-            CompletionStage<JsonNode> getGuestAccountFuture = saviyntService
-                    .getGuestAccount("email", Optional.of(email), Optional.empty())
-                    .invoke()
-                    .exceptionally(throwable -> {
-                        LOGGER.error("Error occurred while retrieving guest account details for email : " + email);
                         Throwable cause = throwable.getCause();
-                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
-                                || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
-                            throw new GuestNotFoundException();
-                        }
-                        
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                             throw new InvalidEmailException();
                         }
-                        
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-                    }).thenCombineAsync(aemEmailTemplateFuture, (saviyntResponse, aemResponse) -> {
-                        ObjectNode combinedResponse = saviyntResponse.deepCopy();
-                        combinedResponse.set("emailResponse", aemResponse);
-                        
-                        return combinedResponse;
-                    });
-            
-            return saviyntService.getUserToken()
-                    .invoke(saviyntUserToken)
-                    .exceptionally(throwable -> {
-                        Throwable cause = throwable.getCause();
-                        if (cause instanceof SaviyntExceptionFactory.MissingUsernameException) {
-                            throw new GuestNotFoundException();
-                        }
-                        
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-                    })
-                    .thenCombineAsync(getGuestAccountFuture, (userTokenJsonNode, getUserAndAemCombinedResponse) -> {
-                        String userToken = userTokenJsonNode.get("TOKEN").asText();
-                        
-                        StringBuilder resetPasswordURL = new StringBuilder(request.getLink());
-                        resetPasswordURL.append("?token=");
-                        resetPasswordURL.append(userToken);
-                        
-                        LOGGER.info("Sending email notification to reset password");
-                        
-                        persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
-                                .ask(new EmailNotificationCommand.SendEmailNotification(
-                                        EmailNotification.builder()
-                                                .recipient(email)
-                                                .sender("notifications@rccl.com")
-                                                .subject("Reset your My Cruises password")
-                                                .content(this.composeEmailContent(getUserAndAemCombinedResponse, resetPasswordURL.toString()))
-                                                .build()
-                                ));
-                        
-                        return new Pair<>(ResponseHeader.OK.withStatus(200), NotUsed.getInstance());
-                    });
-        };
-    }
-    
-    @Override
-    public HeaderServiceCall<PasswordInformation, NotUsed> updatePassword(String vdsId) {
-        return (requestHeader, request) -> {
-            
-            LOGGER.info("processing update-password request");
-            
-            guestAccountPasswordValidator.validateAccountPasswordFields(request, vdsId);
-            
-            final SaviyntGuest savinyntGuest = this.mapAttributesToSaviynt(request, vdsId);
-            return saviyntService
-                    .updateGuestAccount()
-                    .invoke(savinyntGuest)
-                    .exceptionally(exception -> {
-                        Throwable cause = exception.getCause();
                         
                         if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
                             throw new GuestNotFoundException();
                         }
                         
-                        if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                            throw new InvalidEmailException();
-                        }
-                        
-                        if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
-                            throw new InvalidPasswordException();
-                        }
-                        
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), exception);
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
-                    .thenApply(response -> new Pair<>(ResponseHeader.OK.withStatus(200), NotUsed.getInstance()));
+                    .thenCompose(accountStatus -> {
+                        if (StringUtils.isNotBlank(accountStatus.getVdsId())) {
+                            return this.executeVDSUserForgotPasswordEmail(accountStatus, request, email);
+                        } else if ("NeedsToBeMigrated".equals(accountStatus.getMessage())) {
+                            return this.executeWebShopperForgotPasswordEmail(request, email);
+                        } else {
+                            throw new GuestNotFoundException();
+                        }
+                    });
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<ForgotPasswordToken, NotUsed> validateForgotPasswordToken() {
+        return (requestHeader, request) -> {
+            LOGGER.info("Processing forgot password token validation...");
+            
+            SaviyntUserToken saviyntUserToken;
+            
+            // populate user with email address|VDS ID and token if VDS ID is specified in the request,
+            // otherwise, do the WebShopper approach with shopperId|shopperUserName|firstName|lastName
+            if (StringUtils.isNotBlank(request.getVdsId())) {
+                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.NewUserChecks.class);
+                
+                saviyntUserToken = SaviyntUserToken.builder()
+                        .user(request.getEmail() + "|" + request.getVdsId())
+                        .token(request.getToken())
+                        .build();
+                
+            } else {
+                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.WebShopperChecks.class);
+                saviyntUserToken = SaviyntUserToken.builder()
+                        .user(request.getWebShopperId() + "|"
+                                + request.getFirstName() + "|"
+                                + request.getLastName() + "|"
+                                + request.getWebShopperUsername())
+                        .token(request.getToken())
+                        .build();
+            }
+            
+            return saviyntService.validateUserToken().invoke(saviyntUserToken)
+                    .exceptionally(throwable -> {
+                        Throwable cause = throwable.getCause();
+                        
+                        if (cause instanceof SaviyntExceptionFactory.InvalidUserTokenException) {
+                            throw new InvalidPasswordTokenException();
+                        } else if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                            throw new GuestNotFoundException();
+                        }
+                        
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    })
+                    .thenApply(notUsed ->
+                            Pair.create(ResponseHeader.OK, NotUsed.getInstance())
+                    );
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword() {
+        return (requestHeader, request) -> {
+            
+            LOGGER.info("processing update-password request");
+            
+            guestAccountPasswordValidator.validateAccountPasswordFields(request);
+            
+            final SaviyntUpdatePassword savinyntPassword = this.mapAttributesToSaviynt(request);
+            
+            // if request token is not empty, execute validateTokenUpdatePassword Saviynt service.
+            if (StringUtils.isNotBlank(savinyntPassword.getToken())) {
+                return saviyntService.updateAccountPasswordWithToken().invoke(savinyntPassword)
+                        .exceptionally(throwable -> {
+                            Throwable cause = throwable.getCause();
+                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                    || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                                throw new GuestNotFoundException();
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                                throw new InvalidEmailException();
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
+                                throw new InvalidPasswordException();
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidUserTokenException) {
+                                throw new InvalidPasswordTokenException();
+                            }
+                            
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        })
+                        .thenCompose(response -> this.authenticateUser(request));
+                
+            } else {
+                return saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
+                        .exceptionally(throwable -> {
+                            Throwable cause = throwable.getCause();
+                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
+                                throw new GuestNotFoundException();
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                                throw new InvalidEmailException();
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
+                                throw new InvalidPasswordException();
+                            }
+                            
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        })
+                        .thenCompose(response -> {
+                            if (response.getRemainingAttempts() != null) {
+                                ObjectNode responseJson = OBJECT_MAPPER.createObjectNode();
+                                responseJson.put("message", "Invalid Security Question and Answer.");
+                                responseJson.put("remainingAttempts", response.getRemainingAttempts());
+                                return CompletableFuture.completedFuture(
+                                        Pair.create(ResponseHeader.OK.withStatus(400), responseJson));
+                            }
+                            
+                            return this.authenticateUser(request);
+                        });
+            }
         };
     }
     
@@ -199,37 +247,212 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     /**
+     * Authenticates user ONLY if channel is either {@code app-ios} or {@code app-android}.
+     * If the channel specified in the header is {@code web}, return immediately.
+     *
+     * @param passwordInformation the {@link PasswordInformation} request.
+     * @return {@link CompletionStage}
+     */
+    private CompletionStage<Pair<ResponseHeader, JsonNode>> authenticateUser(PasswordInformation passwordInformation) {
+        if (passwordInformation.getHeader() != null
+                && "web".equals(passwordInformation.getHeader().getChannel())) {
+            return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, OBJECT_MAPPER.createObjectNode()));
+        }
+        ForgeRockCredentials forgeRockCredentials = ForgeRockCredentials.builder()
+                .username(passwordInformation.getEmail())
+                .password(passwordInformation.getPassword())
+                .build();
+        
+        return forgeRockService.authenticateMobileUser().invoke(forgeRockCredentials)
+                .exceptionally(throwable -> {
+                    Throwable cause = throwable.getCause();
+                    
+                    if (cause instanceof ForgeRockExceptionFactory.AuthenticationException) {
+                        ForgeRockExceptionFactory.AuthenticationException ex =
+                                (ForgeRockExceptionFactory.AuthenticationException) cause;
+                        throw new GuestAuthenticationException(ex.getErrorDescription());
+                    }
+                    
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                })
+                .thenApply(mobileTokens -> {
+                    ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
+                    jsonResponse.put("accountLoginStatus", LoginStatusEnum.NEW_ACCOUNT_AUTHENTICATED.value())
+                            .put("accessToken", mobileTokens.getAccessToken())
+                            .put("refreshToken", mobileTokens.getRefreshToken())
+                            .put("openIdToken", mobileTokens.getIdToken())
+                            .put("tokenExpiration", mobileTokens.getExpiration());
+                    
+                    OpenIdTokenInformation decryptedInfo = ForgeRockJWTDecoder
+                            .decodeJwtToken(mobileTokens.getIdToken(), OpenIdTokenInformation.class);
+                    
+                    if (decryptedInfo != null) {
+                        jsonResponse.put("vdsId", decryptedInfo.getVdsId())
+                                .put("firstName", decryptedInfo.getFirstName())
+                                .put("lastName", decryptedInfo.getLastName())
+                                .put("email", decryptedInfo.getEmail())
+                                .put("birthdate", decryptedInfo.getBirthdate());
+                    }
+                    
+                    return Pair.create(ResponseHeader.OK, jsonResponse);
+                });
+    }
+    
+    /**
+     * Prepares and executes an persistent entity event request for a VDS User version of forgot password email.
+     *
+     * @param status  {@link AccountStatus} Saviynt response object from AccountStatus service call.
+     * @param request {@link ForgotPassword} from forgotPassword service call.
+     * @param email   the email address of the user.
+     * @return {@link NotUsed}
+     */
+    private CompletionStage<Pair<ResponseHeader, NotUsed>> executeVDSUserForgotPasswordEmail(AccountStatus status,
+                                                                                             ForgotPassword request,
+                                                                                             String email) {
+        CompletionStage<JsonNode> aemEmailTemplateFuture =
+                aemService.getResetPasswordEmail(GuestAccountPasswordService.SHIP_CODE).invoke()
+                        .exceptionally(throwable -> {
+                            LOGGER.error("Error occurred while retrieving AEM reset password email template.");
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        });
+        
+        return saviyntService
+                .getGuestAccount("email", Optional.of(email), Optional.empty())
+                .invoke()
+                .exceptionally(throwable -> {
+                    LOGGER.error("Error occurred while retrieving guest account "
+                            + "details for email : " + email);
+                    
+                    Throwable cause = throwable.getCause();
+                    
+                    if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                            || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        throw new GuestNotFoundException();
+                        
+                    } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                        throw new InvalidEmailException();
+                    }
+                    
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    
+                }).thenCombineAsync(aemEmailTemplateFuture, (saviyntResponse, aemResponse) -> {
+                    
+                    StringBuilder resetPasswordURL = new StringBuilder(request.getLink());
+                    
+                    // pass VDS ID and user token parameters for reset password if it's returned
+                    // from forgotPasswordAccountStatus response.
+                    if (status.getVdsId() != null && status.getToken() != null) {
+                        resetPasswordURL.append("?vdsId=").append(status.getVdsId())
+                                .append("&username=").append(email)
+                                .append("&token=").append(status.getToken());
+                    }
+                    
+                    LOGGER.info("Sending email notification to reset password");
+                    
+                    persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
+                            .ask(new EmailNotificationCommand.SendEmailNotification(
+                                    EmailNotification.builder()
+                                            .recipient(email)
+                                            .sender("notifications@rccl.com")
+                                            .subject("Reset your My Cruises password")
+                                            .content(this.composeEmailContent(saviyntResponse.getGuest().getFirstName(),
+                                                    email, aemResponse, resetPasswordURL.toString()))
+                                            .build()
+                            ));
+                    
+                    return Pair.create(ResponseHeader.OK, NotUsed.getInstance());
+                });
+    }
+    
+    /**
+     * Prepares and executes a persistent entity event request for a WebShopper User version of forgot password email.
+     *
+     * @param request {@link ForgotPassword} from forgotPassword service call.
+     * @param email   the email address of the user.
+     * @return {@link NotUsed}
+     */
+    private CompletionStage<Pair<ResponseHeader, NotUsed>> executeWebShopperForgotPasswordEmail(ForgotPassword request,
+                                                                                                String email) {
+        CompletionStage<JsonNode> aemEmailTemplateFuture =
+                aemService.getResetPasswordEmailMigration(GuestAccountPasswordService.SHIP_CODE).invoke()
+                        .exceptionally(throwable -> {
+                            LOGGER.error("Error occurred while retrieving AEM reset password email template.");
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        });
+        
+        WebShopperAccount shopperAccount = WebShopperAccount.builder().userIdentifier(email).build();
+        
+        return saviyntService.getWebShopperPasswordToken()
+                .invoke(shopperAccount)
+                .exceptionally(throwable -> {
+                    Throwable cause = throwable.getCause();
+                    
+                    if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                            || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        throw new GuestNotFoundException();
+                    } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                        throw new InvalidEmailException();
+                    }
+                    
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                })
+                .thenCombineAsync(aemEmailTemplateFuture, (saviyntResponse, aemResponse) -> {
+                    
+                    String resetPasswordURL = request.getLink()
+                            + "?webShopperId=" + saviyntResponse.getShopperId()
+                            + "&webShopperUserName=" + saviyntResponse.getLoginUsername()
+                            + "&firstName=" + saviyntResponse.getFirstName()
+                            + "&lastName=" + saviyntResponse.getLastName()
+                            + "&token=" + saviyntResponse.getToken();
+                    
+                    persistentEntityRegistry.refFor(EmailNotificationEntity.class, email)
+                            .ask(new EmailNotificationCommand.SendEmailNotification(
+                                    EmailNotification.builder()
+                                            .recipient(email)
+                                            .sender("notifications@rccl.com")
+                                            .subject("Reset your My Cruises password")
+                                            .content(this.composeEmailContent(saviyntResponse.getFirstName(),
+                                                    email, aemResponse, resetPasswordURL))
+                                            .build()
+                            ));
+                    
+                    return Pair.create(ResponseHeader.OK, NotUsed.getInstance());
+                });
+    }
+    
+    /**
      * Sets all the necessary attribute values for password update in Saviynt model.
      *
      * @param passwordInformation {@link PasswordInformation}
-     * @param vdsId               {@code String}
      * @return {@code SaviyntGuest}
      */
-    private SaviyntGuest mapAttributesToSaviynt(PasswordInformation passwordInformation, String vdsId) {
-        return SaviyntGuest.builder()
-                .vdsId(vdsId)
-                .password(passwordInformation.getPassword())
-                .propertytosearch("systemUserName")
+    private SaviyntUpdatePassword mapAttributesToSaviynt(PasswordInformation passwordInformation) {
+        return SaviyntUpdatePassword.builder()
+                .vdsId(passwordInformation.getVdsId())
+                .email(passwordInformation.getEmail())
+                .securityQuestion(passwordInformation.getSecurityQuestion())
+                .securityAnswer(passwordInformation.getSecurityAnswer())
+                .password(new String(passwordInformation.getPassword()))
+                .token(passwordInformation.getToken())
                 .build();
     }
     
     /**
      * Replaces the email content variables with the proper guest attributes.
      *
-     * @param getUserAndAemCombinedResponse combined Saviynt getGuest and AEM reset password email responses
-     * @param resetLinkURL                  service consumer provided URL appended with TOKEN from Saviynt
+     * @param firstName    the guest's first name.
+     * @param email        the guest's email address
+     * @param aemResponse  AEM reset password email responses
+     * @param resetLinkURL service consumer provided URL appended with TOKEN from Saviynt
      * @return {@link String} Email Content
      */
-    private String composeEmailContent(JsonNode getUserAndAemCombinedResponse, String resetLinkURL) {
-        ObjectNode guestJson = getUserAndAemCombinedResponse.deepCopy();
-        String name = guestJson.get("Attributes").get("firstname").asText();
-        String email = guestJson.get("Attributes").get("email").asText();
-        String emailContent = guestJson.findValue("data").get("text").asText(); // this is coming from "emailResponse"
+    private String composeEmailContent(String firstName, String email, JsonNode aemResponse, String resetLinkURL) {
+        String emailContent = aemResponse.findValue("data").get("text").asText();
         
         return StringUtils.replaceEach(
                 emailContent,
                 new String[]{"<first name>", "<guest username/email>", "<link to reset>"},
-                new String[]{name, email, resetLinkURL}
+                new String[]{firstName, email, resetLinkURL}
         );
     }
 }

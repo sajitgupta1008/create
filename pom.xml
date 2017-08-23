@@ -27,8 +27,9 @@
     <lombok.version>1.16.16</lombok.version>
     <lagom.version>1.3.6</lagom.version>
     <middleware.aem.version>1.0-SNAPSHOT</middleware.aem.version>
-    <middleware.common.version>1.7.0</middleware.common.version>
+    <middleware.common.version>1.7.1</middleware.common.version>
     <middleware.saviynt.version>1.0-SNAPSHOT</middleware.saviynt.version>
+    <middleware.forgerock.version>1.0-SNAPSHOT</middleware.forgerock.version>
     <ops.common.version>1.0.0</ops.common.version>
     <org.json.version>20160810</org.json.version>
     <play.version>2.5.14</play.version>
@@ -63,7 +64,8 @@
           <unmanagedServices>
             <cas_native>http://127.0.0.1:9042</cas_native>
             <saviynt>http://dev1.api.rccl.com</saviynt>
-            <aem>http://tst-rcldigital.aem.rccl.com</aem>
+            <forgerock>http://dev1.api.rccl.com</forgerock>
+            <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
           <cassandraEnabled>false</cassandraEnabled>
@@ -305,6 +307,12 @@
         <groupId>com.rccl.middleware</groupId>
         <artifactId>saviynt</artifactId>
         <version>${middleware.saviynt.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.rccl.middleware</groupId>
+        <artifactId>forgerock</artifactId>
+        <version>${middleware.forgerock.version}</version>
       </dependency>
 
     </dependencies>
