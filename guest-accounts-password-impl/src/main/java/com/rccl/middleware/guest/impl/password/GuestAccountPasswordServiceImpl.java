@@ -438,7 +438,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         
         return StringUtils.replaceEach(
                 emailContent,
-                new String[]{"&lt;first-name&gt;", "&lt;guest username/email&gt;", "&lt;link to reset&gt;"},
+                new String[]{"<first name>", "<guest username/email>", "<link to reset>"},
                 new String[]{firstName, email, resetLinkURL}
         );
     }
