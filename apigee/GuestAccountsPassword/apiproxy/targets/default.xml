@@ -3,7 +3,11 @@
     <Description/>
     <FaultRules/>
     <PreFlow name="PreFlow">
-        <Request/>
+        <Request>
+            <Step>
+                <Name>ExtractVariables.ExtractPathIntoVariable</Name>
+            </Step>
+        </Request>
         <Response>
         </Response>
     </PreFlow>
