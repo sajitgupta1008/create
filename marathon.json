@@ -6,7 +6,7 @@
   "user": null,
   "env": {
     "SHIP_CODE": "AL",
-    "KAFKA_TOPIC_NAME": "notifications_email_dev_v1",
+    "NOTIFICATIONS_EMAIL_TOPIC_NAME": "notifications_email_dev_v1",
     "CAS_CONTACT_POINT_THREE": "10.16.6.162",
     "AEM": "http://stg-rcldigital.aem.rccl.com",
     "CAS_CONTACT_POINT_ONE": "10.16.4.106",
