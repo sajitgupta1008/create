@@ -198,7 +198,6 @@
         <configuration>
           <forkCount>3</forkCount>
           <reuseForks>true</reuseForks>
-          <argLine>-Xmx1024m -XX:MaxPermSize=256m -Dconfig.file=${basedir}/src/test/resources/test-application.conf</argLine>
         </configuration>
       </plugin>
 

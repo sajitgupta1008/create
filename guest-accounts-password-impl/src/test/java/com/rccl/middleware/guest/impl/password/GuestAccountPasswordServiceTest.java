@@ -47,7 +47,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static play.inject.Bindings.bind;
 
-@Ignore
 public class GuestAccountPasswordServiceTest {
     
     private static ActorSystem system;
