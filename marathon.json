@@ -18,6 +18,7 @@
     "CASSANDRA_REPLICATION_STRATEGY": "SimpleStrategy",
     "KAFKA_URL": "10.16.5.94:9092, 10.16.5.91:9092",
     "SAVIYNT": "http://dev1-int.api.rccl.com",
+    "FORGEROCK": "http://dev1-int.api.rccl.com",
     "CASSANDRA_PASSWORD": {
       "secret": "secret30"
     },
