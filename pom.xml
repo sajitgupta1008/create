@@ -159,9 +159,9 @@
           <linkXRef>false</linkXRef>
           <failOnViolation>false</failOnViolation>
           <includeTestSourceDirectory>false</includeTestSourceDirectory>
-          <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-          <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
-          <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
+          <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+          <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
+          <outputFile>${project.basedir}/target/checkstyle-output.xml</outputFile>
         </configuration>
         <executions>
           <execution>
