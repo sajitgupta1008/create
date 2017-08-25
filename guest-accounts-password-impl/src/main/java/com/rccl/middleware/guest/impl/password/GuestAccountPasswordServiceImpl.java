@@ -310,7 +310,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                                                                              ForgotPassword request,
                                                                                              String email) {
         CompletionStage<JsonNode> aemEmailTemplateFuture =
-                aemService.getResetPasswordEmail(GuestAccountPasswordService.SHIP_CODE).invoke()
+                aemService.getResetPasswordEmail("AL").invoke()
                         .exceptionally(throwable -> {
                             LOGGER.error("Error occurred while retrieving AEM reset password email template.");
                             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
@@ -374,7 +374,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     private CompletionStage<Pair<ResponseHeader, NotUsed>> executeWebShopperForgotPasswordEmail(ForgotPassword request,
                                                                                                 String email) {
         CompletionStage<JsonNode> aemEmailTemplateFuture =
-                aemService.getResetPasswordEmailMigration(GuestAccountPasswordService.SHIP_CODE).invoke()
+                aemService.getResetPasswordEmailMigration("AL").invoke()
                         .exceptionally(throwable -> {
                             LOGGER.error("Error occurred while retrieving AEM reset password email template.");
                             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
