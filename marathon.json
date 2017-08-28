@@ -1,6 +1,6 @@
 {
   "volumes": null,
-  "id": "/dev/middleware/guest-accounts/guest-accounts-password",
+  "id": "middleware/guest-accounts/guest-accounts-password",
   "cmd": null,
   "args": null,
   "user": null,
@@ -11,19 +11,20 @@
     "CAS_CONTACT_POINT_ONE": "10.16.4.106",
     "CASSANDRA_REPLICATION_FACTOR": "3",
     "CAS_NATIVE_URL": "tcp://10.16.6.162:8042/cas_native",
-    "CASSANDRA_USERNAME": {
-      "secret": "secret29"
-    },
     "CASSANDRA_REPLICATION_STRATEGY": "SimpleStrategy",
+    "CASSANDRA_USERNAME": {
+      "secret": "CASSANDRA_USERNAME"
+    },
+    "CASSANDRA_PASSWORD": {
+      "secret": "CASSANDRA_PASSWORD"
+    },
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
     "SAVIYNT": "http://dev1-int.api.rccl.com",
     "FORGEROCK": "http://dev1-int.api.rccl.com",
-    "CASSANDRA_PASSWORD": {
-      "secret": "secret30"
-    },
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
-    "HTTP_PORT": "9022"
+    "HTTP_PORT": "9022",
+    "JAVA_OPTS": "-Xmx512m -Xms384m -Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore=/etc/ssl/certs/clientkeystore.jks -Djavax.net.ssl.trustStore=/etc/ssl/certs/cacerts.jks"
   },
   "instances": 2,
   "cpus": 0.5,
@@ -51,7 +52,24 @@
         }
       ],
       "network": "BRIDGE"
-    }
+    },
+    "volumes": [
+      {
+        "containerPath": "/etc/ssl/certs/ca-certificates.crt",
+        "hostPath": "/opt/mesosphere/active/python-requests/lib/python3.5/site-packages/requests/cacert.pem",
+        "mode": "RW"
+      },
+      {
+        "containerPath": "/etc/ssl/certs/clientkeystore.jks",
+        "hostPath": "/opt/mesosphere/certs/clientkeystore.jks",
+        "mode": "RW"
+      },
+      {
+        "containerPath": "/etc/ssl/certs/cacerts.jks",
+        "hostPath": "/opt/mesosphere/certs/cacerts.jks",
+        "mode": "RW"
+      }
+    ]
   },
   "healthChecks": [
     {
@@ -82,11 +100,11 @@
   "acceptedResourceRoles": null,
   "residency": null,
   "secrets": {
-    "secret29": {
-      "source": "guest_accounts_password_user"
+    "CASSANDRA_USERNAME": {
+      "source": "guest_accounts_password_cassandra_user"
     },
-    "secret30": {
-      "source": "guest_accounts_password_password"
+    "CASSANDRA_PASSWORD": {
+      "source": "guest_accounts_password_cassandra_password"
     }
   },
   "taskKillGracePeriodSeconds": null,
