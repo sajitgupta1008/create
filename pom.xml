@@ -73,28 +73,48 @@
       <id>lightbend-commercial</id>
       <name>Lightbend Commercial</name>
       <url>http://10.16.4.8:10118/repository/lightbendproxy/</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
     </repository>
 
     <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
       <id>middleware-nexus-release</id>
       <name>Middleware Nexus Release Repository</name>
       <url>http://10.16.4.8:10118/repository/excalibur-release</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
     </repository>
 
     <repository>
+      <id>middleware-nexus-snapshot</id>
+      <name>Middleware Nexus Snapshot Repository</name>
+      <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
       <snapshots>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>
         <checksumPolicy>fail</checksumPolicy>
       </snapshots>
-      <id>middleware-nexus-snapshot</id>
-      <name>Middleware Nexus Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
     </repository>
 
   </repositories>
