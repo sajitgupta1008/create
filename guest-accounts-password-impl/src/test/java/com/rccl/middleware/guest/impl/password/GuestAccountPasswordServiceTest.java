@@ -81,7 +81,7 @@ public class GuestAccountPasswordServiceTest {
             testServer = null;
         }
         
-        system.shutdown();
+        system.terminate();
         system = null;
     }
     
