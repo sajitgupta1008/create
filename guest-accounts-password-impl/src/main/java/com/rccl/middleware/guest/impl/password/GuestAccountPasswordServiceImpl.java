@@ -26,6 +26,7 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.exceptions.GuestAccountLockedException;
 import com.rccl.middleware.guest.password.exceptions.GuestAuthenticationException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
@@ -195,6 +196,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new InvalidEmailException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
                                 throw new InvalidPasswordException();
+                            } else if (cause instanceof SaviyntExceptionFactory.AccountLockedException) {
+                                throw new GuestAccountLockedException();
                             }
                             
                             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
