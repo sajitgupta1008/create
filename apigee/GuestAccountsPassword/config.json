@@ -47,6 +47,24 @@
       "policies": [],
       "proxies": [],
       "targets": []
+    },
+    {
+      "name": "ship-oasis",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-equinox",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-constellation",
+      "policies": [],
+      "proxies": [],
+      "targets": []
     }
   ]
 }
