@@ -14,6 +14,7 @@ import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
+import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.forgerock.api.ForgeRockService;
 import com.rccl.middleware.forgerock.api.exceptions.ForgeRockExceptionFactory;
@@ -78,7 +79,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<ForgotPassword, NotUsed> forgotPassword(String email) {
+    public HeaderServiceCall<ForgotPassword, ResponseBody> forgotPassword(String email) {
         return (requestHeader, request) -> {
             
             LOGGER.info("Processing forgot-password request for email : " + email);
@@ -111,7 +112,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<ForgotPasswordToken, NotUsed> validateForgotPasswordToken() {
+    public HeaderServiceCall<ForgotPasswordToken, ResponseBody> validateForgotPasswordToken() {
         return (requestHeader, request) -> {
             LOGGER.info("Processing forgot password token validation...");
             
@@ -151,13 +152,14 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
                     .thenApply(notUsed ->
-                            Pair.create(ResponseHeader.OK, NotUsed.getInstance())
-                    );
+                            Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
+                                    .status(ResponseHeader.OK.status())
+                                    .build()));
         };
     }
     
     @Override
-    public HeaderServiceCall<PasswordInformation, JsonNode> updatePassword() {
+    public HeaderServiceCall<PasswordInformation, ResponseBody<JsonNode>> updatePassword() {
         return (requestHeader, request) -> {
             
             LOGGER.info("processing update-password request");
@@ -190,7 +192,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 return saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
-                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
+                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                    || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
@@ -208,7 +211,10 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 responseJson.put("message", "Invalid Security Question and Answer.");
                                 responseJson.put("remainingAttempts", response.getRemainingAttempts());
                                 return CompletableFuture.completedFuture(
-                                        Pair.create(ResponseHeader.OK.withStatus(400), responseJson));
+                                        Pair.create(ResponseHeader.OK.withStatus(400), ResponseBody
+                                                .<JsonNode>builder()
+                                                .status(400).payload(responseJson)
+                                                .build()));
                             }
                             
                             return this.authenticateUser(request);
@@ -253,17 +259,21 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * Authenticates user ONLY if channel is either {@code app-ios} or {@code app-android}.
      * If the channel specified in the header is {@code web}, return immediately.
      *
-     * @param passwordInformation the {@link PasswordInformation} request.
+     * @param pwd the {@link PasswordInformation} request.
      * @return {@link CompletionStage}
      */
-    private CompletionStage<Pair<ResponseHeader, JsonNode>> authenticateUser(PasswordInformation passwordInformation) {
-        if (passwordInformation.getHeader() != null
-                && "web".equals(passwordInformation.getHeader().getChannel())) {
-            return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, OBJECT_MAPPER.createObjectNode()));
+    private CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> authenticateUser(PasswordInformation pwd) {
+        if (pwd.getHeader() != null
+                && "web".equals(pwd.getHeader().getChannel())) {
+            return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, ResponseBody
+                    .<JsonNode>builder()
+                    .status(ResponseHeader.OK.status())
+                    .payload(OBJECT_MAPPER.createObjectNode())
+                    .build()));
         }
         ForgeRockCredentials forgeRockCredentials = ForgeRockCredentials.builder()
-                .username(passwordInformation.getEmail())
-                .password(passwordInformation.getPassword())
+                .username(pwd.getEmail())
+                .password(pwd.getPassword())
                 .build();
         
         return forgeRockService.authenticateMobileUser().invoke(forgeRockCredentials)
@@ -297,7 +307,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 .put("birthdate", decryptedInfo.getBirthdate());
                     }
                     
-                    return Pair.create(ResponseHeader.OK, jsonResponse);
+                    return Pair.create(ResponseHeader.OK, ResponseBody
+                            .<JsonNode>builder()
+                            .status(ResponseHeader.OK.status())
+                            .payload(jsonResponse)
+                            .build());
                 });
     }
     
@@ -309,9 +323,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @param email   the email address of the user.
      * @return {@link NotUsed}
      */
-    private CompletionStage<Pair<ResponseHeader, NotUsed>> executeVDSUserForgotPasswordEmail(AccountStatus status,
-                                                                                             ForgotPassword request,
-                                                                                             String email) {
+    private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeVDSUserForgotPasswordEmail(
+            AccountStatus status, ForgotPassword request, String email) {
         CompletionStage<JsonNode> aemEmailTemplateFuture =
                 aemService.getResetPasswordEmail().invoke()
                         .exceptionally(throwable -> {
@@ -363,7 +376,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                             .build()
                             ));
                     
-                    return Pair.create(ResponseHeader.OK, NotUsed.getInstance());
+                    return Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
+                            .status(ResponseHeader.OK.status())
+                            .build());
                 });
     }
     
@@ -374,8 +389,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @param email   the email address of the user.
      * @return {@link NotUsed}
      */
-    private CompletionStage<Pair<ResponseHeader, NotUsed>> executeWebShopperForgotPasswordEmail(ForgotPassword request,
-                                                                                                String email) {
+    private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeWebShopperForgotPasswordEmail(
+            ForgotPassword request, String email) {
         CompletionStage<JsonNode> aemEmailTemplateFuture =
                 aemService.getResetPasswordEmailMigration().invoke()
                         .exceptionally(throwable -> {
@@ -419,7 +434,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                             .build()
                             ));
                     
-                    return Pair.create(ResponseHeader.OK, NotUsed.getInstance());
+                    return Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
+                            .status(ResponseHeader.OK.status())
+                            .build());
                 });
     }
     
