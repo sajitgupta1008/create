@@ -46,7 +46,7 @@
     <lombok.version>1.16.18</lombok.version>
     <lagom.version>1.3.8</lagom.version>
     <middleware.aem.version>1.0-SNAPSHOT</middleware.aem.version>
-    <middleware.common.version>1.9.3</middleware.common.version>
+    <middleware.common.version>1.11.0</middleware.common.version>
     <middleware.saviynt.version>1.0-SNAPSHOT</middleware.saviynt.version>
     <middleware.forgerock.version>1.0-SNAPSHOT</middleware.forgerock.version>
     <ops.common.version>1.0.0</ops.common.version>
