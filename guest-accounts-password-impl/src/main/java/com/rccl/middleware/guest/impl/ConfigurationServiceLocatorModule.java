@@ -1,19 +1,18 @@
 package com.rccl.middleware.guest.impl;
 
 import com.google.inject.AbstractModule;
-import com.lightbend.lagom.javadsl.client.ConfigurationServiceLocator;
 import com.lightbend.lagom.javadsl.api.ServiceLocator;
+import com.lightbend.lagom.javadsl.client.ConfigurationServiceLocator;
 import play.Configuration;
 import play.Environment;
 
 public class ConfigurationServiceLocatorModule extends AbstractModule {
     
     private final Environment environment;
-    private final Configuration configuration;
     
-    public ConfigurationServiceLocatorModule(Environment environment, Configuration configuration) {
+    public ConfigurationServiceLocatorModule(Environment environment,
+                                             @SuppressWarnings("unused") Configuration configuration) {
         this.environment = environment;
-        this.configuration = configuration;
     }
     
     @Override
