@@ -6,6 +6,7 @@ import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
+import com.rccl.middleware.common.response.ResponseBody;
 import com.typesafe.config.ConfigFactory;
 
 import static com.lightbend.lagom.javadsl.api.Service.named;
@@ -19,11 +20,11 @@ public interface GuestAccountPasswordService extends Service {
     
     String KAFKA_TOPIC_NAME = ConfigFactory.load().getString("kafka.topic.name");
     
-    ServiceCall<ForgotPassword, NotUsed> forgotPassword(String email);
+    ServiceCall<ForgotPassword, ResponseBody> forgotPassword(String email);
     
-    ServiceCall<ForgotPasswordToken, NotUsed> validateForgotPasswordToken();
+    ServiceCall<ForgotPasswordToken, ResponseBody> validateForgotPasswordToken();
     
-    ServiceCall<PasswordInformation, JsonNode> updatePassword();
+    ServiceCall<PasswordInformation, ResponseBody<JsonNode>> updatePassword();
     
     Topic<EmailNotification> emailNotificationTopic();
     

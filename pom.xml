@@ -38,21 +38,21 @@
     <service.name>guest-accounts-password</service.name>
     <service.impl.dir>guest-accounts-password-impl</service.impl.dir>
 
-    <apache.lang.version>3.5</apache.lang.version>
+    <apache.lang.version>3.6</apache.lang.version>
     <hibernate.validator.version>5.4.1.Final</hibernate.validator.version>
     <jaxb.api.version>2.1</jaxb.api.version>
     <junit.version>4.12</junit.version>
     <lightbend.cinnamon.version>2.4.0</lightbend.cinnamon.version>
-    <lombok.version>1.16.16</lombok.version>
-    <lagom.version>1.3.6</lagom.version>
+    <lombok.version>1.16.18</lombok.version>
+    <lagom.version>1.3.8</lagom.version>
     <middleware.aem.version>1.0-SNAPSHOT</middleware.aem.version>
-    <middleware.common.version>1.7.1</middleware.common.version>
+    <middleware.common.version>1.11.0</middleware.common.version>
     <middleware.saviynt.version>1.0-SNAPSHOT</middleware.saviynt.version>
     <middleware.forgerock.version>1.0-SNAPSHOT</middleware.forgerock.version>
     <ops.common.version>1.0.0</ops.common.version>
-    <org.json.version>20160810</org.json.version>
-    <play.version>2.5.14</play.version>
-    <saaj.api.version>1.3.4</saaj.api.version>
+    <org.json.version>20170516</org.json.version>
+    <play.version>2.5.15</play.version>
+    <saaj.api.version>1.3.5</saaj.api.version>
 
   </properties>
 
@@ -154,8 +154,8 @@
         <configuration>
           <unmanagedServices>
             <cas_native>http://127.0.0.1:9042</cas_native>
-            <saviynt>http://dev1.api.rccl.com</saviynt>
-            <forgerock>http://dev1.api.rccl.com</forgerock>
+            <saviynt>http://tst1.api.rccl.com</saviynt>
+            <forgerock>http://tst1.api.rccl.com</forgerock>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
