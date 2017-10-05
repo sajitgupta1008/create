@@ -39,7 +39,7 @@ import com.rccl.middleware.saviynt.api.requests.SaviyntUpdatePassword;
 import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.requests.WebShopperAccount;
 import com.rccl.middleware.saviynt.api.responses.AccountStatus;
-import com.rccl.ops.common.logging.RcclLoggerFactory;
+import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;

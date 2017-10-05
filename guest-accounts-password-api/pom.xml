@@ -49,11 +49,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.rccl.ops</groupId>
-      <artifactId>ops-common</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
