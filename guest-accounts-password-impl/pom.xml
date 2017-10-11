@@ -94,6 +94,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>guest-accounts-authentication-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.lightbend.cinnamon</groupId>
       <artifactId>cinnamon-chmetrics-statsd-reporter_2.11</artifactId>
     </dependency>
@@ -116,11 +121,6 @@
     <dependency>
       <groupId>com.lightbend.cinnamon</groupId>
       <artifactId>cinnamon-chmetrics-jvm-metrics_2.11</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.rccl.middleware</groupId>
-      <artifactId>forgerock</artifactId>
     </dependency>
 
   </dependencies>

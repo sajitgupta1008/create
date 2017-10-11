@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
+import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
@@ -16,19 +17,14 @@ import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
-import com.rccl.middleware.forgerock.api.ForgeRockService;
-import com.rccl.middleware.forgerock.api.exceptions.ForgeRockExceptionFactory;
-import com.rccl.middleware.forgerock.api.jwt.ForgeRockJWTDecoder;
-import com.rccl.middleware.forgerock.api.jwt.OpenIdTokenInformation;
-import com.rccl.middleware.forgerock.api.requests.ForgeRockCredentials;
-import com.rccl.middleware.forgerock.api.requests.LoginStatusEnum;
+import com.rccl.middleware.guest.authentication.AccountCredentials;
+import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountLockedException;
-import com.rccl.middleware.guest.password.exceptions.GuestAuthenticationException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
@@ -40,6 +36,7 @@ import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.requests.WebShopperAccount;
 import com.rccl.middleware.saviynt.api.responses.AccountStatus;
 import com.rccl.ops.common.logging.RcclLoggerFactory;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
@@ -49,6 +46,10 @@ import java.util.concurrent.CompletionStage;
 
 public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordService {
     
+    private static final String APPKEY_HEADER = "AppKey";
+    
+    private static final String DEFAULT_APP_KEY = ConfigFactory.load().getString("apigee.appkey");
+    
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -57,7 +58,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private final AemService aemService;
     
-    private final ForgeRockService forgeRockService;
+    private final GuestAuthenticationService guestAuthenticationService;
     
     private final SaviyntService saviyntService;
     
@@ -65,14 +66,14 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     @Inject
     public GuestAccountPasswordServiceImpl(AemService aemService,
-                                           ForgeRockService forgeRockService,
+                                           GuestAuthenticationService guestAuthenticationService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry) {
         this.aemService = aemService;
-        this.forgeRockService = forgeRockService;
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
+        this.guestAuthenticationService = guestAuthenticationService;
         
         this.persistentEntityRegistry = persistentEntityRegistry;
         persistentEntityRegistry.register(EmailNotificationEntity.class);
@@ -152,9 +153,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                     })
                     .thenApply(notUsed ->
-                            Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
-                                    .status(ResponseHeader.OK.status())
-                                    .build()));
+                            Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder().build()));
         };
     }
     
@@ -186,7 +185,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             
                             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
                         })
-                        .thenCompose(response -> this.authenticateUser(request));
+                        .thenCompose(response -> this.authenticateUser(requestHeader, request));
                 
             } else {
                 return saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
@@ -217,7 +216,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                                 .build()));
                             }
                             
-                            return this.authenticateUser(request);
+                            return this.authenticateUser(requestHeader, request);
                         });
             }
         };
@@ -262,57 +261,35 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @param pwd the {@link PasswordInformation} request.
      * @return {@link CompletionStage}
      */
-    private CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> authenticateUser(PasswordInformation pwd) {
+    private CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> authenticateUser(RequestHeader requestHeader,
+                                                                                           PasswordInformation pwd) {
         if (pwd.getHeader() != null
                 && "web".equals(pwd.getHeader().getChannel())) {
             return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, ResponseBody
                     .<JsonNode>builder()
-                    .status(ResponseHeader.OK.status())
                     .payload(OBJECT_MAPPER.createObjectNode())
                     .build()));
         }
-        ForgeRockCredentials forgeRockCredentials = ForgeRockCredentials.builder()
+        AccountCredentials accountCredentials = AccountCredentials
+                .builder()
+                .header(pwd.getHeader())
                 .username(pwd.getEmail())
                 .password(pwd.getPassword())
                 .build();
         
-        return forgeRockService.authenticateMobileUser().invoke(forgeRockCredentials)
+        final String appKey = requestHeader.getHeader(APPKEY_HEADER).orElse(DEFAULT_APP_KEY);
+        
+        return guestAuthenticationService.authenticateUser()
+                .handleRequestHeader(rh -> rh.withHeader(APPKEY_HEADER, appKey))
+                .invoke(accountCredentials)
                 .exceptionally(throwable -> {
-                    Throwable cause = throwable.getCause();
-                    
-                    if (cause instanceof ForgeRockExceptionFactory.AuthenticationException) {
-                        ForgeRockExceptionFactory.AuthenticationException ex =
-                                (ForgeRockExceptionFactory.AuthenticationException) cause;
-                        throw new GuestAuthenticationException(ex.getErrorDescription());
-                    }
-                    
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
                 })
-                .thenApply(mobileTokens -> {
-                    ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
-                    jsonResponse.put("accountLoginStatus", LoginStatusEnum.NEW_ACCOUNT_AUTHENTICATED.value())
-                            .put("accessToken", mobileTokens.getAccessToken())
-                            .put("refreshToken", mobileTokens.getRefreshToken())
-                            .put("openIdToken", mobileTokens.getIdToken())
-                            .put("tokenExpiration", mobileTokens.getExpiration());
-                    
-                    OpenIdTokenInformation decryptedInfo = ForgeRockJWTDecoder
-                            .decodeJwtToken(mobileTokens.getIdToken(), OpenIdTokenInformation.class);
-                    
-                    if (decryptedInfo != null) {
-                        jsonResponse.put("vdsId", decryptedInfo.getVdsId())
-                                .put("firstName", decryptedInfo.getFirstName())
-                                .put("lastName", decryptedInfo.getLastName())
-                                .put("email", decryptedInfo.getEmail())
-                                .put("birthdate", decryptedInfo.getBirthdate());
-                    }
-                    
-                    return Pair.create(ResponseHeader.OK, ResponseBody
-                            .<JsonNode>builder()
-                            .status(ResponseHeader.OK.status())
-                            .payload(jsonResponse)
-                            .build());
-                });
+                .thenApply(jsonResponse ->
+                        Pair.create(ResponseHeader.OK, ResponseBody
+                                .<JsonNode>builder()
+                                .payload(jsonResponse.getPayload())
+                                .build()));
     }
     
     /**
@@ -376,9 +353,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                             .build()
                             ));
                     
-                    return Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
-                            .status(ResponseHeader.OK.status())
-                            .build());
+                    return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
     }
     
@@ -434,9 +409,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                             .build()
                             ));
                     
-                    return Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder()
-                            .status(ResponseHeader.OK.status())
-                            .build());
+                    return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
     }
     
