@@ -283,7 +283,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .handleRequestHeader(rh -> rh.withHeader(APPKEY_HEADER, appKey))
                 .invoke(accountCredentials)
                 .exceptionally(throwable -> {
-                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable.getCause());
+                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError,
+                            throwable.getCause());
                 })
                 .thenApply(jsonResponse ->
                         Pair.create(ResponseHeader.OK, ResponseBody
