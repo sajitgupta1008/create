@@ -509,12 +509,6 @@
       </dependency>
 
       <dependency>
-        <groupId>com.rccl.ops</groupId>
-        <artifactId>ops-common</artifactId>
-        <version>${ops.common.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.rccl.middleware</groupId>
         <artifactId>aem-lagom-services</artifactId>
         <version>1.0-SNAPSHOT</version>

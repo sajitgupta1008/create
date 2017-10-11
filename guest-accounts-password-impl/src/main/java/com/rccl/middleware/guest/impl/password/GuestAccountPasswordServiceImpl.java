@@ -15,6 +15,7 @@ import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
+import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
 import com.rccl.middleware.guest.authentication.AccountCredentials;
@@ -35,7 +36,6 @@ import com.rccl.middleware.saviynt.api.requests.SaviyntUpdatePassword;
 import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.requests.WebShopperAccount;
 import com.rccl.middleware.saviynt.api.responses.AccountStatus;
-import com.rccl.ops.common.logging.RcclLoggerFactory;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 
