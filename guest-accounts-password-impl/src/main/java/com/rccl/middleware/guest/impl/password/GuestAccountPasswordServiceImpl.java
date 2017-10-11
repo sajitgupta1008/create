@@ -48,7 +48,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final String APPKEY_HEADER = "AppKey";
     
-    private static final String DEFAULT_APP_KEY = ConfigFactory.load().getString("apigee.appkey");
+    private static final String DEFAULT_APP_KEY = ConfigFactory.load().getString("apigee.default.appkey");
     
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(GuestAccountPasswordServiceImpl.class);
     
@@ -283,7 +283,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .handleRequestHeader(rh -> rh.withHeader(APPKEY_HEADER, appKey))
                 .invoke(accountCredentials)
                 .exceptionally(throwable -> {
-                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
+                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable.getCause());
                 })
                 .thenApply(jsonResponse ->
                         Pair.create(ResponseHeader.OK, ResponseBody
