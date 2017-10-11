@@ -15,10 +15,11 @@ import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.aem.api.AemServiceImplStub;
+import com.rccl.middleware.common.header.Header;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
-import com.rccl.middleware.forgerock.api.ForgeRockService;
-import com.rccl.middleware.forgerock.api.ForgeRockServiceImplStub;
+import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
+import com.rccl.middleware.guest.authentication.GuestAuthenticationServiceStub;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
@@ -33,7 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.concurrent.ExecutionException;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
@@ -61,7 +62,7 @@ public class GuestAccountPasswordServiceTest {
     public static void setUp() {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
-                        bind(ForgeRockService.class).to(ForgeRockServiceImplStub.class),
+                        bind(GuestAuthenticationService.class).to(GuestAuthenticationServiceStub.class),
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
                         bind(AemService.class).to(AemServiceImplStub.class),
                         bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
@@ -124,7 +125,6 @@ public class GuestAccountPasswordServiceTest {
     public void testSuccessfulEmailNotificationPublishing() {
         final ServiceTest.Setup setup = defaultSetup()
                 .configureBuilder(builder -> builder.overrides(
-                        bind(ForgeRockService.class).to(ForgeRockServiceImplStub.class),
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
                         bind(AemService.class).to(AemServiceImplStub.class)
                 )).withCassandra(true);
@@ -261,6 +261,7 @@ public class GuestAccountPasswordServiceTest {
     @Test
     public void shouldUpdatePasswordSuccessfully() throws Exception {
         PasswordInformation passwordInformation = PasswordInformation.builder()
+                .header(Header.builder().brand('R').channel("app-ios").locale(Locale.US).build())
                 .email("successful@domain.com").vdsId("G1234567")
                 .password("password1".toCharArray()).token("thisisasampletoken").build();
         
@@ -294,10 +295,11 @@ public class GuestAccountPasswordServiceTest {
         assertNotNull("This should fail and throw an exception instead.", result);
     }
     
-    @Test(expected = ExecutionException.class)
+    @Test(expected = SaviyntExceptionFactory.InvalidUserTokenException.class)
     public void shouldNotUpdatePasswordForNonExistingUser() throws Exception {
         PasswordInformation passwordInformation = PasswordInformation.builder()
-                .vdsId("G1234567").email("nonexisting@email.com")
+                .header(Header.builder().brand('R').channel("app-ios").locale(Locale.US).build())
+                .vdsId("G7654321").email("nonexisting@email.com")
                 .password("password1".toCharArray()).token("thisisasampletoken").build();
         
         HeaderServiceCall<PasswordInformation, ResponseBody<JsonNode>> updatePasswordService =

@@ -20,7 +20,7 @@
     },
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
     "SAVIYNT": "http://dev1-int.api.rccl.com",
-    "FORGEROCK": "http://dev1-int.api.rccl.com",
+    "GUEST_ACCOUNTS_AUTHENTICATION": "http://dev1-int.api.rccl.com/v1",
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
     "HTTP_PORT": "9022",
