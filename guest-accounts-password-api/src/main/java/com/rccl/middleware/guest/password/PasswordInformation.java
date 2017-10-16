@@ -7,10 +7,10 @@ import com.rccl.middleware.common.validation.validator.GuestAccountPassword;
 import com.rccl.middleware.common.validation.validator.ValidatorConstants;
 import lombok.Builder;
 import lombok.Value;
-import org.hibernate.validator.constraints.Email;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
 
@@ -31,8 +31,9 @@ public class PasswordInformation implements Jsonable {
     String vdsId;
     
     @NotNull(message = "An email is required.", groups = DefaultChecks.class)
-    @Size(min = 5, max = 256, message = "The email can only have up to 256 characters.", groups = DefaultChecks.class)
-    @Email(regexp = ValidatorConstants.EMAIL_REGEXP, groups = DefaultChecks.class)
+    @Size(min = 5, max = 100, message = "The email can have a minimum of 5 characters and " 
+            + "a maximum of 100 characters.", groups = DefaultChecks.class)
+    @Pattern(regexp = ValidatorConstants.EMAIL_REGEXP, groups = DefaultChecks.class)
     String email;
     
     @NotNull(message = "A token is required.", groups = TokenChecks.class)

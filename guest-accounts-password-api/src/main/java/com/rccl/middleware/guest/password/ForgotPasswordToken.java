@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rccl.middleware.common.validation.validator.ValidatorConstants;
 import lombok.Builder;
 import lombok.Value;
-import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.Pattern;
@@ -17,8 +16,9 @@ import javax.validation.groups.Default;
 public class ForgotPasswordToken {
     
     @NotEmpty(message = "An email is required.", groups = NewUserChecks.class)
-    @Size(min = 5, max = 256, message = "The email can only have up to 256 characters.", groups = NewUserChecks.class)
-    @Email(regexp = ValidatorConstants.EMAIL_REGEXP,
+    @Size(min = 5, max = 100, message = "The email can have a minimum of 5 characters and "
+            + "a maximum of 100 characters.", groups = NewUserChecks.class)
+    @Pattern(regexp = ValidatorConstants.EMAIL_REGEXP,
             message = "The email is invalidly formatted.", groups = NewUserChecks.class)
     String email;
     
