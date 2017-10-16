@@ -1,5 +1,6 @@
 package com.rccl.middleware.guest.password;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rccl.middleware.common.validation.validator.ValidatorConstants;
 import lombok.Builder;
 import lombok.Value;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 
 @Value
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ForgotPassword {
     
     @NotEmpty(message = "An email is required.")

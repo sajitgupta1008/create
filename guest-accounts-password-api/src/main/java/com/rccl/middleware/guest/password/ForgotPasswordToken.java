@@ -1,5 +1,6 @@
 package com.rccl.middleware.guest.password;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rccl.middleware.common.validation.validator.ValidatorConstants;
 import lombok.Builder;
 import lombok.Value;
@@ -12,6 +13,7 @@ import javax.validation.groups.Default;
 
 @Builder
 @Value
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ForgotPasswordToken {
     
     @NotEmpty(message = "An email is required.", groups = NewUserChecks.class)
@@ -39,11 +41,11 @@ public class ForgotPasswordToken {
     @NotEmpty(message = "A token is required.", groups = DefaultChecks.class)
     String token;
     
-    public interface NewUserChecks {
+    public interface NewUserChecks extends DefaultChecks {
         // Validation group interface.
     }
     
-    public interface WebShopperChecks {
+    public interface WebShopperChecks extends DefaultChecks {
         // Validation group interface.
     }
     
