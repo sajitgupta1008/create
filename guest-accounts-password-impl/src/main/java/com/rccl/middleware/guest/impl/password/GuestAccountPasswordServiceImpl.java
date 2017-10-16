@@ -121,7 +121,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             // populate user with email address|VDS ID and token if VDS ID is specified in the request,
             // otherwise, do the WebShopper approach with shopperId|shopperUserName|firstName|lastName
-            if (StringUtils.isNotBlank(request.getVdsId())) {
+            if (request.getVdsId() != null) {
                 MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.NewUserChecks.class);
                 
                 saviyntUserToken = SaviyntUserToken.builder()
