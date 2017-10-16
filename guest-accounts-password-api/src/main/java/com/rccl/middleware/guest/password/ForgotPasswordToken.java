@@ -23,6 +23,8 @@ public class ForgotPasswordToken {
     String email;
     
     @NotEmpty(message = "A VDS ID is required.", groups = NewUserChecks.class)
+    @Pattern(regexp = "([GEC])\\d+", message = "The VDS ID is invalidly formatted.", groups = NewUserChecks.class)
+    @Size(max = 9, message = "The VDS ID can have a maximum of 9 characters.", groups = NewUserChecks.class)
     String vdsId;
     
     @NotEmpty(message = "A Shopper ID is required.", groups = WebShopperChecks.class)

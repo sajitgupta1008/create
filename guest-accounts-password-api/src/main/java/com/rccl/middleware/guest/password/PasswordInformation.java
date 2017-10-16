@@ -28,6 +28,8 @@ public class PasswordInformation implements Jsonable {
     char[] password;
     
     @NotNull(message = "A VDS ID is required.", groups = TokenChecks.class)
+    @Pattern(regexp = "([GEC])\\d+", message = "The VDS ID is invalidly formatted.", groups = TokenChecks.class)
+    @Size(max = 9, message = "The VDS ID can have a maximum of 9 characters.", groups = TokenChecks.class)
     String vdsId;
     
     @NotNull(message = "An email is required.", groups = DefaultChecks.class)
