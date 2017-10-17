@@ -21,6 +21,7 @@ import com.rccl.middleware.guest.authentication.AccountCredentials;
 import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationEntity;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationTag;
+import com.rccl.middleware.guest.impl.password.email.PasswordUpdatedConfirmationEmail;
 import com.rccl.middleware.guest.impl.password.email.ResetPasswordEmail;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
@@ -66,12 +67,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private final ResetPasswordEmail resetPasswordEmail;
     
+    private final PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail;
+    
     @Inject
     public GuestAccountPasswordServiceImpl(GuestAuthenticationService guestAuthenticationService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry,
-                                           ResetPasswordEmail resetPasswordEmail) {
+                                           ResetPasswordEmail resetPasswordEmail,
+                                           PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail) {
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         this.guestAuthenticationService = guestAuthenticationService;
@@ -80,6 +84,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         persistentEntityRegistry.register(EmailNotificationEntity.class);
         
         this.resetPasswordEmail = resetPasswordEmail;
+        this.passwordUpdatedConfirmationEmail = passwordUpdatedConfirmationEmail;
     }
     
     @Override
@@ -170,9 +175,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             final SaviyntUpdatePassword savinyntPassword = this.mapAttributesToSaviynt(request);
             
+            CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> stage;
+            
             // if request token is not empty, execute validateTokenUpdatePassword Saviynt service.
             if (StringUtils.isNotBlank(savinyntPassword.getToken())) {
-                return saviyntService.updateAccountPasswordWithToken().invoke(savinyntPassword)
+                stage = saviyntService.updateAccountPasswordWithToken().invoke(savinyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
@@ -191,7 +198,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         .thenCompose(response -> this.authenticateUser(requestHeader, request));
                 
             } else {
-                return saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
+                stage = saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
@@ -222,6 +229,12 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             return this.authenticateUser(requestHeader, request);
                         });
             }
+            
+            return stage.thenApply(returnMe -> {
+                passwordUpdatedConfirmationEmail.send(request);
+                
+                return returnMe;
+            });
         };
     }
     
