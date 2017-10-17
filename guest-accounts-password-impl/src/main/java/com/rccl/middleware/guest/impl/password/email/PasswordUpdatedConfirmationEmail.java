@@ -8,11 +8,12 @@ import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.EmailNotification;
-import org.apache.commons.lang3.StringUtils;
+import com.rccl.middleware.guest.password.PasswordInformation;
 
 import java.util.concurrent.CompletionStage;
 
 public class PasswordUpdatedConfirmationEmail {
+    
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(ResetPasswordEmail.class);
     
     private AemService aemService;
@@ -20,21 +21,21 @@ public class PasswordUpdatedConfirmationEmail {
     private PersistentEntityRegistry persistentEntityRegistry;
     
     public PasswordUpdatedConfirmationEmail(AemService aemService,
-                              PersistentEntityRegistry persistentEntityRegistry) {
+                                            PersistentEntityRegistry persistentEntityRegistry) {
         this.aemService = aemService;
         this.persistentEntityRegistry = persistentEntityRegistry;
     }
     
-    public void send(String email) {
+    public void send(PasswordInformation pi) {
         this.getPasswordUpdatedConfirmationEmailTemplate()
                 .thenAccept(aemTemplateResponse -> {
-                    String content = this.getPopulatedEmailTemplate(aemTemplateResponse, email);
+                    String content = this.getPopulatedEmailTemplate(aemTemplateResponse, pi.getEmail());
                     String sender = "notifications@rccl.com";
                     String subject = aemTemplateResponse.get("subject").asText();
                     
                     EmailNotification en = EmailNotification.builder()
                             .content(content)
-                            .recipient(email)
+                            .recipient(pi.getEmail())
                             .sender(sender)
                             .subject(subject)
                             .build();
