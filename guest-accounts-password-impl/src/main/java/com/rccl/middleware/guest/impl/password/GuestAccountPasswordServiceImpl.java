@@ -173,13 +173,13 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             guestAccountPasswordValidator.validateAccountPasswordFields(request);
             
-            final SaviyntUpdatePassword savinyntPassword = this.mapAttributesToSaviynt(request);
+            final SaviyntUpdatePassword saviyntPassword = this.mapAttributesToSaviynt(request);
             
             CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> stage;
             
             // if request token is not empty, execute validateTokenUpdatePassword Saviynt service.
-            if (StringUtils.isNotBlank(savinyntPassword.getToken())) {
-                stage = saviyntService.updateAccountPasswordWithToken().invoke(savinyntPassword)
+            if (StringUtils.isNotBlank(saviyntPassword.getToken())) {
+                stage = saviyntService.updateAccountPasswordWithToken().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
@@ -198,7 +198,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         .thenCompose(response -> this.authenticateUser(requestHeader, request));
                 
             } else {
-                stage = saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(savinyntPassword)
+                stage = saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
                             if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
