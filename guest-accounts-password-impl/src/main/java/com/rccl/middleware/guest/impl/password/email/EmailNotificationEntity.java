@@ -1,4 +1,4 @@
-package com.rccl.middleware.guest.impl.password;
+package com.rccl.middleware.guest.impl.password.email;
 
 
 import akka.Done;
