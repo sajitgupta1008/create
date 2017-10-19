@@ -7,6 +7,7 @@ import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.rccl.middleware.common.response.ResponseBody;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.typesafe.config.ConfigFactory;
 
 import static com.lightbend.lagom.javadsl.api.Service.named;

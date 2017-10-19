@@ -4,7 +4,7 @@ import akka.Done;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 import com.lightbend.lagom.serialization.CompressedJsonable;
 import com.lightbend.lagom.serialization.Jsonable;
-import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import lombok.Builder;
 import lombok.Value;
 

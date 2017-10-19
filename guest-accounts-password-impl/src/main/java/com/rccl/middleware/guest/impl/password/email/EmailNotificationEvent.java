@@ -3,7 +3,7 @@ package com.rccl.middleware.guest.impl.password.email;
 import com.lightbend.lagom.javadsl.persistence.AggregateEvent;
 import com.lightbend.lagom.javadsl.persistence.AggregateEventTag;
 import com.lightbend.lagom.serialization.Jsonable;
-import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import lombok.Value;
 import org.codehaus.jackson.annotate.JsonCreator;
 

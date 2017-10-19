@@ -24,7 +24,7 @@ import com.rccl.middleware.guest.impl.password.email.EmailNotificationCommand;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationEntity;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationEvent;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationState;
-import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;

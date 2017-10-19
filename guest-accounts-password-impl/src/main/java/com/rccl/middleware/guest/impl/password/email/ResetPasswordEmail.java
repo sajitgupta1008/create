@@ -1,17 +1,14 @@
 package com.rccl.middleware.guest.impl.password.email;
 
 import ch.qos.logback.classic.Logger;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
-import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
-import com.rccl.middleware.guest.password.EmailNotification;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import java.util.concurrent.CompletionStage;
