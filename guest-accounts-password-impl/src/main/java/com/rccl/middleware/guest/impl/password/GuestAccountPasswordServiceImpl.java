@@ -230,9 +230,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         });
             }
             
-            return stage.thenApply(returnMe -> {
+            return stage.thenApplyAsync(returnMe -> {
                 passwordUpdatedConfirmationEmail.send(request);
-                
                 return returnMe;
             });
         };

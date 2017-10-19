@@ -9,8 +9,13 @@ import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
+import com.rccl.middleware.saviynt.api.SaviyntService;
+import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
+import com.rccl.middleware.saviynt.api.responses.AccountInformation;
 
 import javax.inject.Inject;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
@@ -22,32 +27,52 @@ public class PasswordUpdatedConfirmationEmail {
     
     private PersistentEntityRegistry persistentEntityRegistry;
     
+    private SaviyntService saviyntService;
+    
     @Inject
     public PasswordUpdatedConfirmationEmail(AemEmailService aemEmailService,
-                                            PersistentEntityRegistry persistentEntityRegistry) {
+                                            PersistentEntityRegistry persistentEntityRegistry,
+                                            SaviyntService saviyntService) {
         this.aemEmailService = aemEmailService;
         this.persistentEntityRegistry = persistentEntityRegistry;
+        this.saviyntService = saviyntService;
     }
     
     public void send(PasswordInformation pi) {
-        this.getEmailContent(pi)
-                .thenAccept(htmlEmailTemplate -> {
-                    String content = htmlEmailTemplate.getHtmlMessage();
-                    String sender = "notifications@rccl.com";
-                    String subject = htmlEmailTemplate.getSubject();
+        this.getGuestInformation(pi)
+                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest().getFirstName())
+                        .thenAccept(htmlEmailTemplate -> {
+                            String content = htmlEmailTemplate.getHtmlMessage();
+                            String sender = htmlEmailTemplate.getSender();
+                            String subject = htmlEmailTemplate.getSubject();
+                            
+                            EmailNotification en = EmailNotification.builder()
+                                    .content(content)
+                                    .recipient(pi.getEmail())
+                                    .sender(sender)
+                                    .subject(subject)
+                                    .build();
+                            
+                            this.sendToTopic(en);
+                        }));
+    }
+    
+    private CompletionStage<AccountInformation> getGuestInformation(PasswordInformation pi) {
+        return saviyntService.getGuestAccount("systemUserName", Optional.empty(), Optional.of(pi.getVdsId()))
+                .invoke()
+                .exceptionally(throwable -> {
+                    Throwable cause = throwable.getCause();
                     
-                    EmailNotification en = EmailNotification.builder()
-                            .content(content)
-                            .recipient(pi.getEmail())
-                            .sender(sender)
-                            .subject(subject)
-                            .build();
+                    if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                            || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                        throw new GuestNotFoundException();
+                    }
                     
-                    this.sendToTopic(en);
+                    throw new MiddlewareTransportException(TransportErrorCode.BadRequest, throwable);
                 });
     }
     
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi) {
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName) {
         if (pi.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
         }
@@ -58,8 +83,6 @@ public class PasswordUpdatedConfirmationEmail {
             throw new IllegalArgumentException("The brand header property in the PasswordInformation must not be null.");
         }
         
-        // TODO: Retrieve the first name.
-        String firstName = "";
         Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
             LOGGER.error("#getEmailContent:", throwable);
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
