@@ -350,7 +350,10 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 .append("&token=").append(status.getToken());
                     }
                     
-                    resetPasswordEmail.send(email, saviyntResponse.getGuest().getFirstName(), resetPasswordUrl.toString());
+                    resetPasswordEmail.send(request,
+                            email,
+                            saviyntResponse.getGuest().getFirstName(),
+                            resetPasswordUrl.toString());
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
@@ -389,7 +392,10 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             + "&lastName=" + saviyntResponse.getLastName()
                             + "&token=" + saviyntResponse.getToken();
                     
-                    resetPasswordEmail.send(email, saviyntResponse.getFirstName(), resetPasswordUrl);
+                    resetPasswordEmail.send(request,
+                            email,
+                            saviyntResponse.getFirstName(),
+                            resetPasswordUrl);
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
