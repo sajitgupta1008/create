@@ -19,7 +19,7 @@ import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
 public interface GuestAccountPasswordService extends Service {
     
-    String NOTIFICATIONS_KAFKA_TOPIC = ConfigFactory.load().getString("kafka.topic.name");
+    String NOTIFICATIONS_KAFKA_TOPIC = ConfigFactory.load().getString("kafka.notifications.topic.name");
     
     ServiceCall<ForgotPassword, ResponseBody> forgotPassword(String email);
     
