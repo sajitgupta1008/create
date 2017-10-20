@@ -29,5 +29,5 @@ public class EmailNotification implements Jsonable {
     String encoding = "UTF-8";
     
     @Builder.Default
-    String contentType = "text/plain; charset=utf-8";
+    String contentType = "text/html; charset=utf-8";
 }
