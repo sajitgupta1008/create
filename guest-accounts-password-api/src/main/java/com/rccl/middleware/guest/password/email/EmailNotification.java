@@ -25,7 +25,9 @@ public class EmailNotification implements Jsonable {
     @JsonProperty("bcc")
     String blindCarbonCopy;
     
-    @Builder.Default String encoding = "UTF-8";
+    @Builder.Default
+    String encoding = "UTF-8";
     
-    @Builder.Default String contentType = "text/plain; charset=utf-8";
+    @Builder.Default
+    String contentType = "text/plain; charset=utf-8";
 }
