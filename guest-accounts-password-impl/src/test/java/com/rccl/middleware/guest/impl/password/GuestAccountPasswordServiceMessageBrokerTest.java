@@ -80,8 +80,11 @@ public class GuestAccountPasswordServiceMessageBrokerTest {
         
         PasswordInformation pi = PasswordInformation.builder()
                 .header(header)
-                .vdsId("G12345678")
-                .email("lawn@order.com")
+                .vdsId("G1234567")
+                .email("successful@domain.com")
+                .password("juanalacubana1234".toCharArray())
+                .securityQuestion("What was your dream job as a child?")
+                .securityAnswer("Professional Water Distributor")
                 .build();
         
         service.updatePassword()
