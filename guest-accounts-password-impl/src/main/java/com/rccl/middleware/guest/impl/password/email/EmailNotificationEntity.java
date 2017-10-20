@@ -1,6 +1,5 @@
 package com.rccl.middleware.guest.impl.password.email;
 
-
 import akka.Done;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 import com.rccl.middleware.guest.password.email.EmailNotification;
