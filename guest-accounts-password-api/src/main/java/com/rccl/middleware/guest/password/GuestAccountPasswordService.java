@@ -19,7 +19,7 @@ import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
 public interface GuestAccountPasswordService extends Service {
     
-    String KAFKA_TOPIC_NAME = ConfigFactory.load().getString("kafka.topic.name");
+    String NOTIFICATIONS_KAFKA_TOPIC = ConfigFactory.load().getString("kafka.topic.name");
     
     ServiceCall<ForgotPassword, ResponseBody> forgotPassword(String email);
     
@@ -33,14 +33,19 @@ public interface GuestAccountPasswordService extends Service {
     
     @Override
     default Descriptor descriptor() {
-        return named("guestAccountsPassword").withCalls(
-                restCall(POST, "/guestAccounts/:email/forgotPassword", this::forgotPassword),
-                restCall(POST, "/guestAccounts/forgotPassword/tokenValidation",
-                        this::validateForgotPasswordToken),
-                restCall(PUT, "/guestAccounts/password", this::updatePassword),
-                restCall(GET, "/guestAccounts/health", this::healthCheck))
+        return named("guestAccountsPassword")
+                .withCalls(
+                        restCall(POST, "/guestAccounts/:email/forgotPassword",
+                                this::forgotPassword),
+                        restCall(POST, "/guestAccounts/forgotPassword/tokenValidation",
+                                this::validateForgotPasswordToken),
+                        restCall(PUT, "/guestAccounts/password",
+                                this::updatePassword),
+                        restCall(GET, "/guestAccounts/health",
+                                this::healthCheck)
+                )
                 .withTopics(
-                        topic(KAFKA_TOPIC_NAME, this::emailNotificationTopic)
+                        topic(NOTIFICATIONS_KAFKA_TOPIC, this::emailNotificationTopic)
                 )
                 .withAutoAcl(true);
     }
