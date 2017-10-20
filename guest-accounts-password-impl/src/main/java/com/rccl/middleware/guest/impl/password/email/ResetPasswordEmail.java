@@ -47,7 +47,8 @@ public class ResetPasswordEmail {
                 });
     }
     
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName, String resetPasswordUrl) {
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName,
+                                                               String resetPasswordUrl) {
         if (fp.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the ForgotPassword must not be null.");
         }

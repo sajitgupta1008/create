@@ -80,7 +80,8 @@ public class PasswordUpdatedConfirmationEmail {
         Character brand = pi.getHeader().getBrand();
         
         if (brand == null) {
-            throw new IllegalArgumentException("The brand header property in the PasswordInformation must not be null.");
+            throw new IllegalArgumentException("The brand header property in the "
+                    + "PasswordInformation must not be null.");
         }
         
         Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
