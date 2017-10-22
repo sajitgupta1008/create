@@ -31,6 +31,7 @@ import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -48,6 +49,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static play.inject.Bindings.bind;
 
+@Ignore
 public class GuestAccountPasswordServiceTest {
     
     private static ActorSystem system;
