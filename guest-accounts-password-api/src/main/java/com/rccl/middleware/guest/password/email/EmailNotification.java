@@ -1,4 +1,4 @@
-package com.rccl.middleware.guest.password;
+package com.rccl.middleware.guest.password.email;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

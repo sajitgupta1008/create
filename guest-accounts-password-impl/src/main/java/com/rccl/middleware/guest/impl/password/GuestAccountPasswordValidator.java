@@ -37,6 +37,7 @@ public class GuestAccountPasswordValidator {
      */
     public void validateForgotPasswordFields(ForgotPassword forgotPassword, String email) {
         MiddlewareValidation.validate(ForgotPassword.builder()
+                .header(forgotPassword.getHeader())
                 .email(email)
                 .link(forgotPassword.getLink())
                 .build());

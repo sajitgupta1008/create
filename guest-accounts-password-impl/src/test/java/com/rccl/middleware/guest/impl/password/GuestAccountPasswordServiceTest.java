@@ -1,26 +1,21 @@
 package com.rccl.middleware.guest.impl.password;
 
-import akka.Done;
 import akka.actor.ActorSystem;
 import akka.japi.Pair;
-import akka.stream.javadsl.Source;
-import akka.stream.testkit.TestSubscriber;
-import akka.stream.testkit.javadsl.TestSink;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
-import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver;
-import com.lightbend.lagom.javadsl.testkit.PersistentEntityTestDriver.Outcome;
 import com.lightbend.lagom.javadsl.testkit.ServiceTest;
 import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.aem.api.AemServiceImplStub;
+import com.rccl.middleware.aem.api.email.AemEmailService;
+import com.rccl.middleware.aem.api.email.AemEmailServiceStub;
 import com.rccl.middleware.common.header.Header;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
 import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
 import com.rccl.middleware.guest.authentication.GuestAuthenticationServiceStub;
-import com.rccl.middleware.guest.password.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
@@ -28,24 +23,17 @@ import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer;
-import static com.lightbend.lagom.javadsl.testkit.ServiceTest.withServer;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static play.inject.Bindings.bind;
 
@@ -58,8 +46,6 @@ public class GuestAccountPasswordServiceTest {
     
     private static GuestAccountPasswordService guestAccountPasswordService;
     
-    private static PersistentEntityTestDriver<EmailNotificationCommand, EmailNotificationEvent, EmailNotificationState> driver;
-    
     @BeforeClass
     public static void setUp() {
         final ServiceTest.Setup setup = defaultSetup()
@@ -67,6 +53,7 @@ public class GuestAccountPasswordServiceTest {
                         bind(GuestAuthenticationService.class).to(GuestAuthenticationServiceStub.class),
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
                         bind(AemService.class).to(AemServiceImplStub.class),
+                        bind(AemEmailService.class).to(AemEmailServiceStub.class),
                         bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
                 ));
         
@@ -74,7 +61,6 @@ public class GuestAccountPasswordServiceTest {
         guestAccountPasswordService = testServer.client(GuestAccountPasswordService.class);
         
         system = ActorSystem.create();
-        driver = new PersistentEntityTestDriver<>(system, new EmailNotificationEntity(), "email");
     }
     
     @AfterClass
@@ -100,58 +86,6 @@ public class GuestAccountPasswordServiceTest {
                 .get(5, TimeUnit.SECONDS);
         
         assertTrue("Should return a status 200.", result.first().status() == 200);
-    }
-    
-    @Test
-    public void testEmailNotificationEntity() {
-        EmailNotification emailNotificationSample = EmailNotification.builder()
-                .recipient("successful@domain.com")
-                .sender("sender@email.com")
-                .content("hello world")
-                .subject("test")
-                .build();
-        
-        Outcome<EmailNotificationEvent, EmailNotificationState> outcome = driver.run(EmailNotificationCommand.SendEmailNotification
-                .builder()
-                .emailNotification(emailNotificationSample)
-                .build());
-        
-        assertThat(outcome.events().get(0).getEmailNotification(), is(equalTo(emailNotificationSample)));
-        assertThat(outcome.events().size(), is(equalTo(1)));
-        assertThat(outcome.state().getEmailNotification(), is(equalTo(emailNotificationSample)));
-        assertThat(outcome.getReplies().get(0), is(equalTo(Done.getInstance())));
-        assertThat(outcome.issues().isEmpty(), is(true));
-    }
-    
-    @Test
-    public void testSuccessfulEmailNotificationPublishing() {
-        final ServiceTest.Setup setup = defaultSetup()
-                .configureBuilder(builder -> builder.overrides(
-                        bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
-                        bind(AemService.class).to(AemServiceImplStub.class)
-                )).withCassandra(true);
-        
-        withServer(setup, server -> {
-            GuestAccountPasswordService client = server.client(GuestAccountPasswordService.class);
-            Source<EmailNotification, ?> source = client.emailNotificationTopic().subscribe().atMostOnceSource();
-            
-            TestSubscriber.Probe<EmailNotification> probe = source
-                    .runWith(
-                            TestSink.probe(server.system()), server.materializer()
-                    );
-            
-            client.forgotPassword("successful@domain.com")
-                    .invoke(createSampleForgotPassword())
-                    .toCompletableFuture()
-                    .get(10, TimeUnit.SECONDS);
-            
-            FiniteDuration finiteDuration = new FiniteDuration(20, SECONDS);
-            EmailNotification actual = probe.request(1).expectNext(finiteDuration);
-            
-            assertTrue("Email sender must not be empty.", StringUtils.isNotEmpty(actual.getSender()));
-            assertTrue("Email recipient must not be empty.", StringUtils.isNotEmpty(actual.getRecipient()));
-            assertTrue("Email body must not be empty", StringUtils.isNotEmpty(actual.getContent()));
-        });
     }
     
     @Test(expected = MiddlewareValidationException.class)
@@ -317,6 +251,9 @@ public class GuestAccountPasswordServiceTest {
     }
     
     private ForgotPassword createSampleForgotPassword() {
-        return ForgotPassword.builder().link("http://www.rccl.com/forgotPassword").build();
+        return ForgotPassword.builder()
+                .header(Header.builder().channel("web").brand('R').build())
+                .link("http://www.rccl.com/forgotPassword")
+                .build();
     }
 }
