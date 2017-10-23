@@ -1,4 +1,4 @@
-package com.rccl.middleware.guest.password;
+package com.rccl.middleware.guest.password.email;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +25,9 @@ public class EmailNotification implements Jsonable {
     @JsonProperty("bcc")
     String blindCarbonCopy;
     
-    @Builder.Default String encoding = "UTF-8";
+    @Builder.Default
+    String encoding = "UTF-8";
     
-    @Builder.Default String contentType = "text/plain; charset=utf-8";
+    @Builder.Default
+    String contentType = "text/html; charset=utf-8";
 }
