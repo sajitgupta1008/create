@@ -15,6 +15,8 @@ public interface EmailNotificationCommand extends Jsonable {
     final class SendEmailNotification implements EmailNotificationCommand,
             CompressedJsonable, PersistentEntity.ReplyType<Done> {
         
+        private static final long serialVersionUID = 1L;
+        
         final EmailNotification emailNotification;
     }
 }
