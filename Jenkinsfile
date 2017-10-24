@@ -1,1 +1,1 @@
-microservicesPipelines()
+microservicesPipeline()
