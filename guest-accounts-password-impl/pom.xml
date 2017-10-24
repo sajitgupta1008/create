@@ -169,19 +169,16 @@
         <artifactId>docker-maven-plugin</artifactId>
         <version>${maven.docker.plugin.version}</version>
         <configuration>
-          <skip>${skipDockerBuild}</skip>
+          <skip>false</skip>
           <logStdout>true</logStdout>
-          <dockerHost>${dockerHost}</dockerHost>
-          <certPath>${dockerRegistryCertPath}</certPath>
           <useColor>true</useColor>
           <images>
             <image>
-              <name>${service.name}</name>
-              <registry>${dockerRegistryURI}</registry>
+              <name>${project.parent.artifactId}</name>
               <build>
-                <dockerFile>${dockerFile}</dockerFile>
+                <dockerFile>Dockerfile</dockerFile>
                 <tags>
-                  <tag>${project.version}</tag>
+                  <tag>${project.parent.version}</tag>
                 </tags>
                 <assembly>
                   <mode>dir</mode>
@@ -196,12 +193,6 @@
             <id>container-build</id>
             <goals>
               <goal>build</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>container-push</id>
-            <goals>
-              <goal>push</goal>
             </goals>
           </execution>
         </executions>
