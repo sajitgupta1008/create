@@ -30,6 +30,8 @@ public class ResetPasswordEmail {
     }
     
     public void send(ForgotPassword fp, String email, String firstName, String resetPasswordUrl) {
+        LOGGER.info("#send - Attempting to send the email to: " + email);
+        
         this.getEmailContent(fp, firstName, resetPasswordUrl)
                 .thenAccept(htmlEmailTemplate -> {
                     String content = htmlEmailTemplate.getHtmlMessage();

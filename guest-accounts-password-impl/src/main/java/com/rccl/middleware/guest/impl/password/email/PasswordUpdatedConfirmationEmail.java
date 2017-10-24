@@ -39,6 +39,8 @@ public class PasswordUpdatedConfirmationEmail {
     }
     
     public void send(PasswordInformation pi) {
+        LOGGER.info("#send - Attempting to send the email to: " + pi.getEmail());
+        
         this.getGuestInformation(pi)
                 .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest().getFirstName())
                         .thenAccept(htmlEmailTemplate -> {
