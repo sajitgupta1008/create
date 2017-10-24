@@ -144,6 +144,7 @@
         <configuration>
           <unmanagedServices>
             <cas_native>http://127.0.0.1:9042</cas_native>
+            <aem-email>http://dev1.api.rccl.com</aem-email>
             <saviynt>http://dev1.api.rccl.com</saviynt>
             <guest_accounts_authentication>http://localhost:9002</guest_accounts_authentication>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
