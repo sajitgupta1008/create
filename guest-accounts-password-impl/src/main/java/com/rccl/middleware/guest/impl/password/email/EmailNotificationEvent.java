@@ -18,6 +18,8 @@ public interface EmailNotificationEvent extends Jsonable, AggregateEvent<EmailNo
     
     @Value
     final class EmailNotificationPublished implements EmailNotificationEvent {
+    
+        private static final long serialVersionUID = 1L;
         
         public final EmailNotification emailNotification;
         

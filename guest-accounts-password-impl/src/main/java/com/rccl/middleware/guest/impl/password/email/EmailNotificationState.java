@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 public final class EmailNotificationState implements CompressedJsonable {
     
+    private static final long serialVersionUID = 1L;
+    
     private final EmailNotification emailNotification;
     
     private final String timestamp;

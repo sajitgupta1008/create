@@ -19,6 +19,8 @@ import javax.validation.groups.Default;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PasswordInformation implements Jsonable {
     
+    private static final long serialVersionUID = 1L;
+    
     @NotNull(message = "A header is required.", groups = DefaultChecks.class)
     @Valid
     Header header;

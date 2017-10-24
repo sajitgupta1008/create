@@ -11,6 +11,8 @@ import lombok.Value;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmailNotification implements Jsonable {
     
+    private static final long serialVersionUID = 1L;
+    
     String sender;
     
     String recipient;

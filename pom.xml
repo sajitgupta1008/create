@@ -7,7 +7,7 @@
 
   <groupId>com.rccl.middleware.guest</groupId>
   <artifactId>guest-accounts-password</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <packaging>pom</packaging>
 
@@ -27,16 +27,13 @@
 
     <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
     <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
-    <maven.dcos.plugin.version>0.2</maven.dcos.plugin.version>
-    <maven.docker.plugin.version>0.21.0</maven.docker.plugin.version>
-    <maven.failsafe.plugin.version>2.19.1</maven.failsafe.plugin.version>
-    <maven.findbugs.plugin.version>3.0.4</maven.findbugs.plugin.version>
+    <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
+    <maven.docker.plugin.version>0.22.1</maven.docker.plugin.version>
+    <maven.failsafe.plugin.version>2.20.1</maven.failsafe.plugin.version>
+    <maven.findbugs.plugin.version>3.0.5</maven.findbugs.plugin.version>
     <maven.jacoco.plugin.version>0.7.9</maven.jacoco.plugin.version>
     <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
-    <maven.surefire.plugin.version>2.19.1</maven.surefire.plugin.version>
-
-    <service.name>guest-accounts-password</service.name>
-    <service.impl.dir>guest-accounts-password-impl</service.impl.dir>
+    <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
 
     <apache.lang.version>3.6</apache.lang.version>
     <hibernate.validator.version>5.4.1.Final</hibernate.validator.version>
@@ -46,7 +43,7 @@
     <lombok.version>1.16.18</lombok.version>
     <lagom.version>1.3.8</lagom.version>
     <middleware.aem.version>1.0-SNAPSHOT</middleware.aem.version>
-    <middleware.common.version>1.11.0</middleware.common.version>
+    <middleware.common.version>1.11.1</middleware.common.version>
     <middleware.saviynt.version>1.0-SNAPSHOT</middleware.saviynt.version>
     <middleware.authentication.version>1.0-SNAPSHOT</middleware.authentication.version>
     <ops.common.version>1.0.0</ops.common.version>
@@ -58,11 +55,18 @@
 
   <distributionManagement>
 
-    <repository>
+    <snapshotRepository>
       <uniqueVersion>false</uniqueVersion>
       <id>middleware-nexus</id>
       <name>Middleware Nexus Snapshot Repository</name>
       <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
+    </snapshotRepository>
+
+    <repository>
+      <uniqueVersion>false</uniqueVersion>
+      <id>middleware-nexus</id>
+      <name>Middleware Nexus Release Repository</name>
+      <url>http://10.16.4.8:10118/repository/excalibur-release</url>
     </repository>
 
   </distributionManagement>
@@ -129,20 +133,6 @@
 
   </pluginRepositories>
 
-  <profiles>
-
-    <profile>
-      <id>sonar</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <sonar.host.url>http://localhost:9000</sonar.host.url>
-      </properties>
-    </profile>
-
-  </profiles>
-
   <build>
 
     <plugins>
@@ -194,6 +184,19 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <compilerArgs>
+            <arg>-parameters</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven.failsafe.plugin.version}</version>
         <executions>
@@ -216,11 +219,20 @@
         <artifactId>findbugs-maven-plugin</artifactId>
         <version>${maven.findbugs.plugin.version}</version>
         <configuration>
-          <failOnError>false</failOnError>
-          <findbugsXmlOutput>true</findbugsXmlOutput>
+          <outputDirectory>${project.build.directory}/findbugs</outputDirectory>
           <xmlOutput>true</xmlOutput>
+          <xmlOutputDirectory>target/findbugs</xmlOutputDirectory>
+          <threshold>Low</threshold>
           <effort>Max</effort>
+          <failOnError>false</failOnError>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -511,7 +523,7 @@
       <dependency>
         <groupId>com.rccl.middleware</groupId>
         <artifactId>aem-lagom-services</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>${middleware.aem.version}</version>
       </dependency>
 
       <dependency>

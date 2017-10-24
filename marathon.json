@@ -1,6 +1,6 @@
 {
   "volumes": null,
-  "id": "middleware/guest-accounts/guest-accounts-password",
+  "id": "guest-accounts/guest-accounts-password",
   "cmd": null,
   "args": null,
   "user": null,
@@ -27,8 +27,8 @@
     "JAVA_OPTS": "-Xmx512m -Xms384m -Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore=/etc/ssl/certs/clientkeystore.jks -Djavax.net.ssl.trustStore=/etc/ssl/certs/cacerts.jks"
   },
   "instances": 2,
-  "cpus": 0.5,
-  "mem": 1500,
+  "cpus": 1,
+  "mem": 2048,
   "disk": 0,
   "gpus": 0,
   "executor": null,
@@ -40,14 +40,13 @@
   "maxLaunchDelaySeconds": 3600,
   "container": {
     "docker": {
-      "image": "rhldcmesboot711.na.rccl.com:5000/guest-accounts-password:v1",
+      "image": "[SET_BY_PIPELINES]",
       "forcePullImage": true,
-      "privileged": false,
+      "privileged": true,
       "portMappings": [
         {
           "containerPort": 9022,
           "protocol": "tcp",
-          "name": "guest-accounts-password-lb",
           "servicePort": 0
         }
       ],
@@ -90,12 +89,11 @@
   },
   "labels": {
     "DCOS_SERVICE_SCHEME": "http",
-    "HAPROXY_GROUP": "external",
-    "DCOS_SERVICE_NAME": "guest-accounts-password",
     "DCOS_SERVICE_PORT_INDEX": "0",
-    "HAPROXY_0_HTTP_BACKEND_PROXYPASS_PATH": "/guest-accounts-password",
-    "HAPROXY_0_PATH": "/guest-accounts-password",
-    "HAPROXY_0_VHOST": "10.16.4.8,dev1.mesos.rccl.com"
+    "HAPROXY_GROUP": "[SET_BY_PIPELINES]",
+    "HAPROXY_0_VHOST": "[SET_BY_PIPELINES]",
+    "HAPROXY_0_PATH": "[SET_BY_PIPELINES]",
+    "HAPROXY_0_HTTP_BACKEND_PROXYPASS_PATH": "[SET_BY_PIPELINES]"
   },
   "acceptedResourceRoles": null,
   "residency": null,
