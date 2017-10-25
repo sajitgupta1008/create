@@ -7,8 +7,8 @@ import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
-import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -60,7 +60,7 @@ public class PasswordUpdatedConfirmationEmail {
     }
     
     private CompletionStage<AccountInformation> getGuestInformation(PasswordInformation pi) {
-        return saviyntService.getGuestAccount("systemUserName", Optional.empty(), Optional.of(pi.getVdsId()))
+        return saviyntService.getGuestAccount("email", Optional.of(pi.getEmail()), Optional.empty())
                 .invoke()
                 .exceptionally(throwable -> {
                     Throwable cause = throwable.getCause();
