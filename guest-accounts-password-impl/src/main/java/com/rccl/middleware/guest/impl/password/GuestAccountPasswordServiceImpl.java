@@ -23,11 +23,11 @@ import com.rccl.middleware.guest.impl.password.email.EmailNotificationEntity;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationTag;
 import com.rccl.middleware.guest.impl.password.email.PasswordUpdatedConfirmationEmail;
 import com.rccl.middleware.guest.impl.password.email.ResetPasswordEmail;
-import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountLockedException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
@@ -385,7 +385,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 })
                 .thenApply(saviyntResponse -> {
                     String resetPasswordUrl = request.getLink()
-                            + "?webShopperId=" + saviyntResponse.getShopperId()
+                            + "?email=" + email
+                            + "webShopperId=" + saviyntResponse.getShopperId()
                             + "&webShopperUserName=" + saviyntResponse.getLoginUsername()
                             + "&firstName=" + saviyntResponse.getFirstName()
                             + "&lastName=" + saviyntResponse.getLastName()
