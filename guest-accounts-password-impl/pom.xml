@@ -90,7 +90,7 @@
 
     <dependency>
       <groupId>com.rccl.middleware</groupId>
-      <artifactId>saviynt</artifactId>
+      <artifactId>guest-accounts-saviynt</artifactId>
     </dependency>
 
     <dependency>
