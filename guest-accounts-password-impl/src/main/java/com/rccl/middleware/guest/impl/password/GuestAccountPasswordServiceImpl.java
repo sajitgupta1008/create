@@ -386,7 +386,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .thenApply(saviyntResponse -> {
                     String resetPasswordUrl = request.getLink()
                             + "?email=" + email
-                            + "webShopperId=" + saviyntResponse.getShopperId()
+                            + "&webShopperId=" + saviyntResponse.getShopperId()
                             + "&webShopperUserName=" + saviyntResponse.getLoginUsername()
                             + "&firstName=" + saviyntResponse.getFirstName()
                             + "&lastName=" + saviyntResponse.getLastName()
