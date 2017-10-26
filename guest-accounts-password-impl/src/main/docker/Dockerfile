@@ -17,7 +17,5 @@ COPY ./maven/* $APP_LIB_DIR
 
 RUN echo "Adding entryPoint.sh"
 ADD ./maven/bin/entryPoint.sh /entryPoint.sh
-ADD ./maven/bin/jmx.access /jmx.access
-ADD ./maven/bin/jmx.user /jmx.user
 
 ENTRYPOINT ["/entryPoint.sh","$APP_DIRECTORY","$APP_LIB_DIR"]

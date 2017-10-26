@@ -57,16 +57,16 @@
 
     <snapshotRepository>
       <uniqueVersion>false</uniqueVersion>
-      <id>middleware-nexus</id>
-      <name>Middleware Nexus Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
+      <id>microservices-nexus</id>
+      <name>Microservices Snapshot Repository</name>
+      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
     </snapshotRepository>
 
     <repository>
       <uniqueVersion>false</uniqueVersion>
-      <id>middleware-nexus</id>
-      <name>Middleware Nexus Release Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-release</url>
+      <id>microservices-nexus</id>
+      <name>Microservices Release Repository</name>
+      <url>http://10.16.4.8:10118/repository/microservices-release</url>
     </repository>
 
   </distributionManagement>
@@ -75,7 +75,7 @@
 
     <repository>
       <id>lightbend-commercial</id>
-      <name>Lightbend Commercial</name>
+      <name>Lightbend Commercial Mirror</name>
       <url>http://10.16.4.8:10118/repository/lightbendproxy/</url>
       <releases>
         <enabled>true</enabled>
@@ -90,9 +90,9 @@
     </repository>
 
     <repository>
-      <id>middleware-nexus-release</id>
-      <name>Middleware Nexus Release Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-release</url>
+      <id>microservices-release</id>
+      <name>Microservices Release Repository</name>
+      <url>http://10.16.4.8:10118/repository/microservices-release</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -106,9 +106,9 @@
     </repository>
 
     <repository>
-      <id>middleware-nexus-snapshot</id>
-      <name>Middleware Nexus Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
+      <id>microservices-snapshot</id>
+      <name>Microservices Snapshot Repository</name>
+      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
       <releases>
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
@@ -126,8 +126,8 @@
   <pluginRepositories>
 
     <pluginRepository>
-      <id>mesosphere-repo</id>
-      <name>Mesosphere Repository</name>
+      <id>mesosphere-mirror</id>
+      <name>Mesosphere Repository Mirror</name>
       <url>http://downloads.mesosphere.io/maven</url>
     </pluginRepository>
 
