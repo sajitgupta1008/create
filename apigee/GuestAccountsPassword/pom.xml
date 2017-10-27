@@ -19,7 +19,7 @@
   <parent>
     <groupId>com.rccl.middleware.apigee</groupId>
     <artifactId>apigee-deploy-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <repositories>
@@ -30,9 +30,9 @@
         <updatePolicy>always</updatePolicy>
         <checksumPolicy>fail</checksumPolicy>
       </snapshots>
-      <id>middleware-nexus-snapshot</id>
-      <name>Middleware Nexus Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/excalibur-snapshot</url>
+      <id>microservices-snapshot</id>
+      <name>Microservices Snapshot Repository</name>
+      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
     </repository>
 
   </repositories>
