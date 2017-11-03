@@ -23,6 +23,7 @@
     <logger name="play" level="WARN" />
     <!-- Set logging for all Akka library classes to WARN -->
     <logger name="akka" level="DEBUG" />
+    <logger name="com.lightbend" level="DEBUG" />
     <!-- Set logging for all Lagom library classes to WARN -->
     <logger name="com.lightbend.lagom" level="WARN" />
     <!-- Cassandra and the datasta driver are used by the Lagom event sourcing modules -->

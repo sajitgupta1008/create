@@ -489,6 +489,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.lightbend.constructr</groupId>
+        <artifactId>constructr-coordination-zookeeper_2.11</artifactId>
+        <version>0.4.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
