@@ -2,6 +2,7 @@ package com.rccl.middleware.guest.password;
 
 import akka.NotUsed;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.lightbend.lagom.javadsl.api.CircuitBreaker;
 import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
@@ -33,7 +34,7 @@ public interface GuestAccountPasswordService extends Service {
     
     @Override
     default Descriptor descriptor() {
-        return named("guestAccountsPassword")
+        return named("guest_accounts_password")
                 .withCalls(
                         restCall(POST, "/guestAccounts/:email/forgotPassword",
                                 this::forgotPassword),
@@ -47,6 +48,7 @@ public interface GuestAccountPasswordService extends Service {
                 .withTopics(
                         topic(NOTIFICATIONS_KAFKA_TOPIC, this::emailNotificationTopic)
                 )
+                .withCircuitBreaker(CircuitBreaker.identifiedBy("guest_accounts_password"))
                 .withAutoAcl(true);
     }
 }
