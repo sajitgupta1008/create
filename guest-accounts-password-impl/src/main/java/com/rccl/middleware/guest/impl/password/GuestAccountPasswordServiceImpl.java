@@ -95,7 +95,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             guestAccountPasswordValidator.validateForgotPasswordFields(request, email);
             
-            return saviyntService.getAccountStatus(email, "displayName", "True").invoke()
+            return saviyntService.getAccountStatus(email, "email", "True").invoke()
                     .exceptionally(throwable -> {
                         Throwable cause = throwable.getCause();
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
