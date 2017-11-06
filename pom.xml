@@ -489,6 +489,12 @@
       </dependency>
 
       <dependency>
+        <groupId>de.heikoseeberger</groupId>
+        <artifactId>constructr_2.11</artifactId>
+        <version>0.17.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.lightbend.constructr</groupId>
         <artifactId>constructr-coordination-zookeeper_2.11</artifactId>
         <version>0.4.0</version>
