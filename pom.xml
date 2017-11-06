@@ -36,6 +36,8 @@
     <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
 
     <apache.lang.version>3.6</apache.lang.version>
+    <constructr.version>0.17.0</constructr.version>
+    <constructr.zookeeper.version>0.4.0</constructr.zookeeper.version>
     <hibernate.validator.version>5.4.1.Final</hibernate.validator.version>
     <jaxb.api.version>2.1</jaxb.api.version>
     <junit.version>4.12</junit.version>
@@ -491,13 +493,13 @@
       <dependency>
         <groupId>de.heikoseeberger</groupId>
         <artifactId>constructr_2.11</artifactId>
-        <version>0.17.0</version>
+        <version>${constructr.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.lightbend.constructr</groupId>
         <artifactId>constructr-coordination-zookeeper_2.11</artifactId>
-        <version>0.4.0</version>
+        <version>${constructr.zookeeper.version}</version>
       </dependency>
 
       <dependency>
