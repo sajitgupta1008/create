@@ -189,6 +189,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new InvalidEmailException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidPasswordFormatException) {
                                 throw new InvalidPasswordException();
+                            } else if (cause instanceof SaviyntExceptionFactory.PasswordReuseException) {
+                                throw new InvalidPasswordException(InvalidPasswordException.REUSE_ERROR);
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidUserTokenException) {
                                 throw new InvalidPasswordTokenException();
                             }
