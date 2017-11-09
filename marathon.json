@@ -11,7 +11,6 @@
     "AEM": "http://stg-rcldigital.aem.rccl.com",
     "CAS_CONTACT_POINT_ONE": "10.16.4.106",
     "CASSANDRA_REPLICATION_FACTOR": "3",
-    "CAS_NATIVE_URL": "tcp://10.16.6.162:8042/cas_native",
     "CASSANDRA_REPLICATION_STRATEGY": "SimpleStrategy",
     "CASSANDRA_USERNAME": {
       "secret": "CASSANDRA_USERNAME"
