@@ -18,7 +18,7 @@
     "CASSANDRA_PASSWORD": {
       "secret": "CASSANDRA_PASSWORD"
     }, 
-    "AKKA_ACTOR_SYSTEM": "guest-accounts-password-application-dev",
+    "AKKA_ACTOR_SYSTEM": "guest-accounts-password-application",
     "CONSTRUCTR_COORDINATION_NODES": "10.16.4.101:2181,10.16.4.227:2181,10.16.7.225:2181",
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
     "SAVIYNT": "http://dev1-int.api.rccl.com",
