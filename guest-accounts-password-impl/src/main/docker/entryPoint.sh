@@ -15,7 +15,7 @@ export appid
 JAVA_OPTS=""
 JMX_CONFIG=""
 PLAY_SECRET=none
-CONFIG="-Dplay.crypto.secret=$PLAY_SECRET -Dlagom.cluster.join-self=on"
+CONFIG="-Dplay.crypto.secret=$PLAY_SECRET"
 PLAY_SERVER_START="play.core.server.ProdServerStart"
 
 exec java -cp "$APP_CLASSPATH" $JAVA_OPTS $JMX_CONFIG $CONFIG $PLAY_SERVER_START
