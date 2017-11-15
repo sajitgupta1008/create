@@ -182,8 +182,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 stage = saviyntService.updateAccountPasswordWithToken().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
-                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
-                                    || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                            if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
@@ -203,8 +202,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 stage = saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
                             Throwable cause = throwable.getCause();
-                            if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
-                                    || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                            if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
@@ -415,7 +413,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .email(passwordInformation.getEmail())
                 .securityQuestion(passwordInformation.getSecurityQuestion())
                 .securityAnswer(passwordInformation.getSecurityAnswer())
-                .password(new String(passwordInformation.getPassword()))
+                .password(passwordInformation.getPassword())
                 .token(passwordInformation.getToken())
                 .build();
     }
