@@ -35,7 +35,7 @@ public class PasswordInformation implements Jsonable {
     String vdsId;
     
     @NotNull(message = "An email is required.", groups = DefaultChecks.class)
-    @Size(min = 5, max = 100, message = "The email can have a minimum of 5 characters and " 
+    @Size(min = 5, max = 100, message = "The email can have a minimum of 5 characters and "
             + "a maximum of 100 characters.", groups = DefaultChecks.class)
     @Pattern(regexp = ValidatorConstants.EMAIL_REGEXP, groups = DefaultChecks.class)
     String email;
