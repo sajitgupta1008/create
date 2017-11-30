@@ -5,6 +5,7 @@
   "args": null,
   "user": null,
   "env": {
+    "AKKA_PORT": "1339",
     "AEM_EMAIL": "http://dev1-int.api.rccl.com",
     "NOTIFICATIONS_EMAIL_TOPIC_NAME": "notifications_email_dev_v1",
     "CAS_CONTACT_POINT_THREE": "10.16.6.162",
