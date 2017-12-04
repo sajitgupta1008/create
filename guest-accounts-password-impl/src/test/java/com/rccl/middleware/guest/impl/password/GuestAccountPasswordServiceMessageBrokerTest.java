@@ -19,6 +19,7 @@ import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -67,8 +68,10 @@ public class GuestAccountPasswordServiceMessageBrokerTest {
         system = null;
     }
     
+    // TODO: Re-enable this logic and unit tests once the Email Communication story is re-approved.
+    @Ignore
     @Test
-    public void testEmailNotificationPublishOnForgotPassword() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testEmailNotificationPublishOnUpdatePassword() throws InterruptedException, ExecutionException, TimeoutException {
         Source<EmailNotification, ?> source = service.emailNotificationTopic()
                 .subscribe()
                 .atMostOnceSource();
@@ -100,7 +103,7 @@ public class GuestAccountPasswordServiceMessageBrokerTest {
     }
     
     @Test
-    public void testEmailNotificationPublishOnPasswordUpdate() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testEmailNotificationPublishOnForgotPassword() throws InterruptedException, ExecutionException, TimeoutException {
         Source<EmailNotification, ?> source = service.emailNotificationTopic()
                 .subscribe()
                 .atMostOnceSource();

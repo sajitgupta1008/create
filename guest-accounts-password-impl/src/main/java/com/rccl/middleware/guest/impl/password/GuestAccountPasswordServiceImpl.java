@@ -233,7 +233,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             }
             
             return stage.thenApplyAsync(returnMe -> {
-                passwordUpdatedConfirmationEmail.send(request);
+                // TODO: Re-enable this logic and unit tests once the Email Communication story is re-approved.
+                // passwordUpdatedConfirmationEmail.send(request);
                 return returnMe;
             });
         };
