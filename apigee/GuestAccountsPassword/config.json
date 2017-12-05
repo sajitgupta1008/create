@@ -65,6 +65,24 @@
       "policies": [],
       "proxies": [],
       "targets": []
+    },
+    {
+      "name": "ship-harmony",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-edge",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-serenade",
+      "policies": [],
+      "proxies": [],
+      "targets": []
     }
   ]
 }
