@@ -102,7 +102,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             throw new InvalidEmailException();
                         }
                         
-                        if (cause instanceof SaviyntExceptionFactory.ExistingGuestException) {
+                        if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                             throw new GuestNotFoundException();
                         }
                         
