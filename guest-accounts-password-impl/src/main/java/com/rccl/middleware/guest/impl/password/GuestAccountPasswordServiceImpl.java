@@ -33,6 +33,7 @@ import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.guest.password.exceptions.InvalidEmailException;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordException;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenException;
+import com.rccl.middleware.guest.password.exceptions.InvalidSecurityQuestionAndAnswerException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import com.rccl.middleware.saviynt.api.requests.SaviyntUpdatePassword;
@@ -212,6 +213,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new GuestAccountLockedException();
                             } else if (cause instanceof SaviyntExceptionFactory.PasswordReuseException) {
                                 throw new InvalidPasswordException(InvalidPasswordException.REUSE_ERROR);
+                            } else if (cause instanceof SaviyntExceptionFactory.InvalidSecurityQuestionOrAnswerException) {
+                                throw new InvalidSecurityQuestionAndAnswerException();
                             }
                             
                             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
