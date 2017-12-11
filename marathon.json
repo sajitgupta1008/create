@@ -18,7 +18,7 @@
     },
     "CASSANDRA_PASSWORD": {
       "secret": "CASSANDRA_PASSWORD"
-    }, 
+    },
     "AKKA_ACTOR_SYSTEM": "guest-accounts-password-application",
     "CONSTRUCTR_COORDINATION_NODES": "10.16.4.101:2181,10.16.4.227:2181,10.16.7.225:2181",
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
@@ -30,7 +30,7 @@
     "JAVA_OPTS": "-Xmx512m -Xms384m -Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore=/etc/ssl/certs/clientkeystore.jks -Djavax.net.ssl.trustStore=/etc/ssl/certs/cacerts.jks"
   },
   "instances": 2,
-  "cpus": 1,
+  "cpus": 0.1,
   "mem": 2048,
   "disk": 0,
   "gpus": 0,
