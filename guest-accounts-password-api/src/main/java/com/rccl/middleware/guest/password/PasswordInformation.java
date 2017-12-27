@@ -49,6 +49,29 @@ public class PasswordInformation implements Jsonable {
     @NotNull(message = "A security answer is required.", groups = QuestionAnswerChecks.class)
     String securityAnswer;
     
+    public char[] getPassword() {
+        if (this.password != null) {
+            return this.password.clone();
+        }
+        
+        return PasswordInformationBuilder.NULL_PASSWORD;
+    }
+    
+    public static class PasswordInformationBuilder {
+        
+        static final char[] NULL_PASSWORD = null;
+        
+        public PasswordInformationBuilder password(char[] password) {
+            if (password != null) {
+                this.password = password.clone();
+            } else {
+                this.password = NULL_PASSWORD;
+            }
+            
+            return this;
+        }
+    }
+    
     public interface QuestionAnswerChecks extends DefaultChecks {
         // Validation group interface.
     }

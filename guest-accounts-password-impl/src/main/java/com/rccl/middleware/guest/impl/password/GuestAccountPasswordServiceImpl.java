@@ -213,7 +213,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new GuestAccountLockedException();
                             } else if (cause instanceof SaviyntExceptionFactory.PasswordReuseException) {
                                 throw new InvalidPasswordException(InvalidPasswordException.REUSE_ERROR);
-                            } else if (cause instanceof SaviyntExceptionFactory.InvalidSecurityQuestionOrAnswerException) {
+                            } else if (cause
+                                    instanceof SaviyntExceptionFactory.InvalidSecurityQuestionOrAnswerException) {
                                 throw new InvalidSecurityQuestionAndAnswerException();
                             }
                             
