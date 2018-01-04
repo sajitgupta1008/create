@@ -39,7 +39,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>GuestAccountsPassword</artifactId>
-  <version>1.0</version>
+  <version>1.0.0</version>
   <name>GuestAccountsPassword</name>
   <packaging>pom</packaging>
 
