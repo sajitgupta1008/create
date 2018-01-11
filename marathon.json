@@ -76,7 +76,7 @@
   "healthChecks": [
     {
       "protocol": "HTTP",
-      "path": "/guestAccounts/health",
+      "path": "/_status/circuit-breaker/current",
       "gracePeriodSeconds": 300,
       "intervalSeconds": 60,
       "timeoutSeconds": 20,
