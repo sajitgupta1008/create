@@ -44,9 +44,13 @@ import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
+import java.net.ConnectException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+
+import static com.rccl.middleware.guest.password.exceptions.GuestPasswordErrorCodeConstants.CONSTRAINT_VIOLATION;
+import static com.rccl.middleware.guest.password.exceptions.GuestPasswordErrorCodeConstants.UNKNOWN_ERROR;
 
 public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordService {
     
@@ -98,7 +102,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             return saviyntService.getAccountStatus(email, "email", "True").invoke()
                     .exceptionally(throwable -> {
+                        LOGGER.error("An error occurred while retrieving Account Status.", throwable);
                         Throwable cause = throwable.getCause();
+                        
+                        if (cause instanceof ConnectException
+                                || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                            throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                    throwable.getMessage(), UNKNOWN_ERROR);
+                        }
+                        
                         if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                             throw new InvalidEmailException();
                         }
@@ -107,7 +119,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             throw new GuestNotFoundException();
                         }
                         
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                                throwable.getMessage(), UNKNOWN_ERROR);
                     })
                     .thenCompose(accountStatus -> {
                         if (StringUtils.isNotBlank(accountStatus.getVdsId())) {
@@ -131,7 +144,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             // populate user with email address|VDS ID and token if VDS ID is specified in the request,
             // otherwise, do the WebShopper approach with shopperId|shopperUserName|firstName|lastName
             if (request.getVdsId() != null) {
-                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.NewUserChecks.class);
+                MiddlewareValidation.validateWithGroups(request, CONSTRAINT_VIOLATION,
+                        ForgotPasswordToken.NewUserChecks.class);
                 
                 saviyntUserToken = SaviyntUserToken.builder()
                         .user(request.getEmail() + "|" + request.getVdsId())
@@ -139,7 +153,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         .build();
                 
             } else {
-                MiddlewareValidation.validateWithGroups(request, ForgotPasswordToken.WebShopperChecks.class);
+                MiddlewareValidation.validateWithGroups(request, CONSTRAINT_VIOLATION,
+                        ForgotPasswordToken.WebShopperChecks.class);
                 saviyntUserToken = SaviyntUserToken.builder()
                         .user(request.getWebShopperId() + "|"
                                 + request.getFirstName() + "|"
@@ -151,7 +166,14 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             
             return saviyntService.validateUserToken().invoke(saviyntUserToken)
                     .exceptionally(throwable -> {
+                        LOGGER.error("An error occurred while validating user token.", throwable);
+                        
                         Throwable cause = throwable.getCause();
+                        if (cause instanceof ConnectException
+                                || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                            throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                    throwable.getMessage(), UNKNOWN_ERROR);
+                        }
                         
                         if (cause instanceof SaviyntExceptionFactory.InvalidUserTokenException) {
                             throw new InvalidPasswordTokenException();
@@ -159,7 +181,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             throw new GuestNotFoundException();
                         }
                         
-                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                        throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                                throwable.getMessage(), UNKNOWN_ERROR);
                     })
                     .thenApply(notUsed ->
                             Pair.create(ResponseHeader.OK, ResponseBody.<NotUsed>builder().build()));
@@ -182,7 +205,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             if (StringUtils.isNotBlank(saviyntPassword.getToken())) {
                 stage = saviyntService.updateAccountPasswordWithToken().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
+                            LOGGER.error("An error occurred when updating password with token", throwable);
                             Throwable cause = throwable.getCause();
+                            
+                            if (cause instanceof ConnectException
+                                    || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                                throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                        throwable.getMessage(), UNKNOWN_ERROR);
+                            }
+                            
                             if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
@@ -195,14 +226,24 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new InvalidPasswordTokenException();
                             }
                             
-                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                                    throwable.getMessage(), UNKNOWN_ERROR);
                         })
                         .thenCompose(response -> this.authenticateUser(requestHeader, request));
                 
             } else {
                 stage = saviyntService.updateAccountPasswordWithQuestionAndAnswer().invoke(saviyntPassword)
                         .exceptionally(throwable -> {
+                            LOGGER.error("An error occurred while trying to update password"
+                                    + " with question and answer.", throwable);
                             Throwable cause = throwable.getCause();
+                            
+                            if (cause instanceof ConnectException
+                                    || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                                throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                        throwable.getMessage(), UNKNOWN_ERROR);
+                            }
+                            
                             if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
@@ -218,7 +259,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                 throw new InvalidSecurityQuestionAndAnswerException();
                             }
                             
-                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                                    throwable.getMessage(), UNKNOWN_ERROR);
                         })
                         .thenCompose(response -> {
                             if (response.getRemainingAttempts() != null) {
@@ -250,6 +292,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 persistentEntityRegistry
                         .eventStream(EmailNotificationTag.EMAIL_NOTIFICATION_TAG, offset)
                         .map(pair -> {
+                            LOGGER.debug("Publishing email notification message...");
                             EmailNotification eventNotification = pair.first().getEmailNotification();
                             EmailNotification emailNotification = EmailNotification
                                     .builder()
@@ -261,19 +304,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                             return new Pair<>(emailNotification, pair.second());
                         })
         );
-    }
-    
-    @Override
-    public HeaderServiceCall<NotUsed, String> healthCheck() {
-        return (requestHeader, request) -> {
-            String quote = "Here's to tall ships. "
-                    + "Here's to small ships. "
-                    + "Here's to all the ships on the sea. "
-                    + "But the best ships are friendships, so here's to you and me!";
-            
-            LOGGER.info("HealthCheck : " + quote);
-            return CompletableFuture.completedFuture(new Pair<>(ResponseHeader.OK, quote));
-        };
     }
     
     /**
@@ -306,7 +336,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 .invoke(accountCredentials)
                 .exceptionally(throwable -> {
                     throw new MiddlewareTransportException(TransportErrorCode.InternalServerError,
-                            throwable.getCause());
+                            throwable.getMessage(), UNKNOWN_ERROR);
                 })
                 .thenApply(jsonResponse ->
                         Pair.create(ResponseHeader.OK, ResponseBody
@@ -335,7 +365,11 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     
                     Throwable cause = throwable.getCause();
                     
-                    if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                    if (cause instanceof ConnectException
+                            || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                throwable.getMessage(), UNKNOWN_ERROR);
+                    } else if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
                             || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                         throw new GuestNotFoundException();
                         
@@ -343,7 +377,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new InvalidEmailException();
                     }
                     
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                            throwable.getMessage(), UNKNOWN_ERROR);
                     
                 }).thenApply(saviyntResponse -> {
                     StringBuilder resetPasswordUrl = new StringBuilder(request.getLink());
@@ -379,16 +414,21 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         return saviyntService.getWebShopperPasswordToken()
                 .invoke(shopperAccount)
                 .exceptionally(throwable -> {
+                    LOGGER.error("An error occurred when trying to get WebShopper Password Token", throwable);
                     Throwable cause = throwable.getCause();
-                    
-                    if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                    if (cause instanceof ConnectException
+                            || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                throwable.getMessage(), UNKNOWN_ERROR);
+                    } else if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
                             || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                         throw new GuestNotFoundException();
                     } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                         throw new InvalidEmailException();
                     }
                     
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                            throwable.getMessage(), UNKNOWN_ERROR);
                 })
                 .thenApply(saviyntResponse -> {
                     String resetPasswordUrl = request.getLink()

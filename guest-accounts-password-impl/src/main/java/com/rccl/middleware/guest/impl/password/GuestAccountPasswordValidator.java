@@ -7,6 +7,8 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import org.apache.commons.lang3.StringUtils;
 
+import static com.rccl.middleware.guest.password.exceptions.GuestPasswordErrorCodeConstants.CONSTRAINT_VIOLATION;
+
 public class GuestAccountPasswordValidator {
     
     /**
@@ -19,9 +21,10 @@ public class GuestAccountPasswordValidator {
      */
     public void validateAccountPasswordFields(PasswordInformation passwordInformation) {
         if (StringUtils.isNotBlank(passwordInformation.getToken())) {
-            MiddlewareValidation.validateWithGroups(passwordInformation, PasswordInformation.TokenChecks.class);
+            MiddlewareValidation.validateWithGroups(passwordInformation, CONSTRAINT_VIOLATION,
+                    PasswordInformation.TokenChecks.class);
         } else {
-            MiddlewareValidation.validateWithGroups(passwordInformation,
+            MiddlewareValidation.validateWithGroups(passwordInformation, CONSTRAINT_VIOLATION,
                     PasswordInformation.QuestionAnswerChecks.class);
         }
     }
@@ -40,6 +43,6 @@ public class GuestAccountPasswordValidator {
                 .header(forgotPassword.getHeader())
                 .email(email)
                 .link(forgotPassword.getLink())
-                .build());
+                .build(), CONSTRAINT_VIOLATION);
     }
 }
