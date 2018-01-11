@@ -212,9 +212,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                                     || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
                                 throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
                                         throwable.getMessage(), UNKNOWN_ERROR);
-                            }
-                            
-                            if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                            } else if (cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
                                 throw new GuestNotFoundException();
                             } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
                                 throw new InvalidEmailException();
