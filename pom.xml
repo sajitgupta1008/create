@@ -7,7 +7,7 @@
 
   <groupId>com.rccl.middleware</groupId>
   <artifactId>guest-accounts-password</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0-SNAPSHOT</version>
 
   <packaging>pom</packaging>
 
@@ -33,7 +33,7 @@
     <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
     <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
     <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
-    <maven.docker.plugin.version>0.22.1</maven.docker.plugin.version>
+    <maven.docker.plugin.version>0.23.0</maven.docker.plugin.version>
     <maven.failsafe.plugin.version>2.20.1</maven.failsafe.plugin.version>
     <maven.findbugs.plugin.version>3.0.5</maven.findbugs.plugin.version>
     <maven.jacoco.plugin.version>0.7.9</maven.jacoco.plugin.version>
@@ -41,19 +41,19 @@
     <maven.sonar.plugin.version>3.3.0.603</maven.sonar.plugin.version>
     <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
 
-    <apache.lang.version>3.6</apache.lang.version>
+    <apache.lang.version>3.7</apache.lang.version>
     <constructr.version>0.17.0</constructr.version>
     <constructr.zookeeper.version>0.4.1</constructr.zookeeper.version>
-    <hibernate.validator.version>5.4.1.Final</hibernate.validator.version>
+    <hibernate.validator.version>6.0.7.Final</hibernate.validator.version>
     <jaxb.api.version>2.1</jaxb.api.version>
     <junit.version>4.12</junit.version>
     <lightbend.cinnamon.version>2.4.0</lightbend.cinnamon.version>
     <lombok.version>1.16.18</lombok.version>
     <lagom.version>1.3.10</lagom.version>
     <middleware.aem.version>1.0.0-SNAPSHOT</middleware.aem.version>
-    <middleware.common.version>1.14.0</middleware.common.version>
+    <middleware.common.version>1.20.1</middleware.common.version>
     <middleware.saviynt.version>1.0.0-SNAPSHOT</middleware.saviynt.version>
-    <middleware.authentication.version>1.0.0-SNAPSHOT</middleware.authentication.version>
+    <middleware.authentication.version>1.1.0-SNAPSHOT</middleware.authentication.version>
     <org.json.version>20170516</org.json.version>
     <play.version>2.5.18</play.version>
     <saaj.api.version>1.3.5</saaj.api.version>
