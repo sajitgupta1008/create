@@ -66,14 +66,14 @@
       <uniqueVersion>false</uniqueVersion>
       <id>microservices-nexus</id>
       <name>Microservices Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/microservices-snapshot</url>
     </snapshotRepository>
 
     <repository>
       <uniqueVersion>false</uniqueVersion>
       <id>microservices-nexus</id>
       <name>Microservices Release Repository</name>
-      <url>http://10.16.4.8:10118/repository/microservices-release</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/microservices-release</url>
     </repository>
 
   </distributionManagement>
@@ -83,7 +83,7 @@
     <repository>
       <id>lightbend-commercial</id>
       <name>Lightbend Commercial Mirror</name>
-      <url>http://10.16.4.8:10118/repository/lightbendproxy/</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/lightbendproxy/</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -99,7 +99,7 @@
     <repository>
       <id>microservices-release</id>
       <name>Microservices Release Repository</name>
-      <url>http://10.16.4.8:10118/repository/microservices-release</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/microservices-release</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -115,7 +115,7 @@
     <repository>
       <id>microservices-snapshot</id>
       <name>Microservices Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/microservices-snapshot</url>
       <releases>
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
