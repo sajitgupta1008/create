@@ -32,7 +32,7 @@
       </snapshots>
       <id>microservices-snapshot</id>
       <name>Microservices Snapshot Repository</name>
-      <url>http://10.16.4.8:10118/repository/microservices-snapshot</url>
+      <url>http://dev1.mesos.rccl.com/nexus/repository/microservices-snapshot</url>
     </repository>
 
   </repositories>
