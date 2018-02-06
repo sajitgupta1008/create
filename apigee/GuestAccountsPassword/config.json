@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "dev",
+      "name": "cloud-dev",
       "policies": [],
       "proxies": [],
       "targets": []
@@ -31,55 +31,67 @@
       "targets": []
     },
     {
-      "name": "cloud-production",
+      "name": "cloud-prod",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-allure",
+      "name": "ship-prod-al",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-symphony",
+      "name": "ship-prod-cs",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-oasis",
+      "name": "ship-prod-eg",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-equinox",
+      "name": "ship-prod-en",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-constellation",
+      "name": "ship-prod-eq",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-harmony",
+      "name": "ship-prod-hm",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-edge",
+      "name": "ship-prod-oa",
       "policies": [],
       "proxies": [],
       "targets": []
     },
     {
-      "name": "ship-serenade",
+      "name": "ship-prod-rf",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-prod-sr",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
+      "name": "ship-prod-sy",
       "policies": [],
       "proxies": [],
       "targets": []
