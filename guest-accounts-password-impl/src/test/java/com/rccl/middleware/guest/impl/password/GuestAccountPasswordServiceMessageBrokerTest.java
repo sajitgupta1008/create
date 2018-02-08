@@ -19,7 +19,6 @@ import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -68,7 +67,6 @@ public class GuestAccountPasswordServiceMessageBrokerTest {
         system = null;
     }
     
-    @Ignore
     @Test
     public void testEmailNotificationPublishOnUpdatePassword() throws InterruptedException, ExecutionException, TimeoutException {
         Source<EmailNotification, ?> source = service.emailNotificationTopic()
