@@ -68,7 +68,6 @@ public class GuestAccountPasswordServiceMessageBrokerTest {
         system = null;
     }
     
-    // TODO: Re-enable this logic and unit tests once the Email Communication story is re-approved.
     @Ignore
     @Test
     public void testEmailNotificationPublishOnUpdatePassword() throws InterruptedException, ExecutionException, TimeoutException {
