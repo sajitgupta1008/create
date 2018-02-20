@@ -95,6 +95,11 @@
 
     <dependency>
       <groupId>com.rccl.middleware</groupId>
+      <artifactId>middleware-akka-cluster-manager</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
       <artifactId>aem-lagom-services</artifactId>
     </dependency>
 

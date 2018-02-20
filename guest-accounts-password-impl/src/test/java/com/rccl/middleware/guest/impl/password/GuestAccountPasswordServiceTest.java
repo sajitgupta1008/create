@@ -1,5 +1,6 @@
 package com.rccl.middleware.guest.impl.password;
 
+import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.japi.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,6 +21,7 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.akka.ActorSystemHealth;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -246,6 +248,21 @@ public class GuestAccountPasswordServiceTest {
                 .get(5, TimeUnit.SECONDS);
         
         assertTrue("This should fail and throw an exception instead.", result == null);
+    }
+    
+    @Test
+    public void testAkkaClusterHealthCheck() throws Exception {
+        HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>> service =
+                (HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>>) guestAccountPasswordService.akkaClusterHealthCheck();
+        
+        Pair<ResponseHeader, ResponseBody<ActorSystemHealth>> response = service.invokeWithHeaders(RequestHeader.DEFAULT, NotUsed.getInstance())
+                .toCompletableFuture().get(10, TimeUnit.SECONDS);
+        
+        ActorSystemHealth payload = response.second().getPayload();
+        
+        assertNotNull(payload.getActorSystemName());
+        assertNotNull(payload.getSelfAddress());
+        assertTrue(!payload.getClusterMembers().isEmpty());
     }
     
     private ForgotPassword createSampleForgotPassword() {

@@ -1,6 +1,7 @@
 package com.rccl.middleware.guest.impl.password;
 
 import akka.NotUsed;
+import akka.cluster.MemberStatus;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +14,7 @@ import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
+import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
@@ -27,6 +29,8 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.akka.ActorSystemHealth;
+import com.rccl.middleware.guest.password.akka.ActorSystemMember;
 import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountLockedException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
@@ -45,6 +49,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -62,6 +68,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
+    private final AkkaClusterManager akkaClusterManager;
+    
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
     
     private final GuestAuthenticationService guestAuthenticationService;
@@ -75,12 +83,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     private final PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail;
     
     @Inject
-    public GuestAccountPasswordServiceImpl(GuestAuthenticationService guestAuthenticationService,
+    public GuestAccountPasswordServiceImpl(AkkaClusterManager akkaClusterManager,
+                                           GuestAuthenticationService guestAuthenticationService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry,
                                            ResetPasswordEmail resetPasswordEmail,
                                            PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail) {
+        this.akkaClusterManager = akkaClusterManager;
+        
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         this.guestAuthenticationService = guestAuthenticationService;
@@ -280,6 +291,40 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 passwordUpdatedConfirmationEmail.send(request);
                 return returnMe;
             });
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>> akkaClusterHealthCheck() {
+        return (requestHeader, notUsed) -> {
+            
+            ActorSystemHealth.ActorSystemHealthBuilder builder = ActorSystemHealth.builder();
+            
+            builder.actorSystemName(akkaClusterManager.getActorSystemName())
+                    .selfAddress(akkaClusterManager.getSelfAddress());
+            
+            List<ActorSystemMember> members = new ArrayList<>();
+            akkaClusterManager.getClusterMembers().forEach(member ->
+                    members.add(ActorSystemMember.builder()
+                            .address(member.address().hostPort())
+                            .status(member.status().toString())
+                            .build()));
+            
+            builder.clusterMembers(members);
+            
+            ResponseHeader responseHeader;
+            if (akkaClusterManager.getSelfStatus() == MemberStatus.up()) {
+                LOGGER.info("Health Check - Akka self address {} with status: {}",
+                        akkaClusterManager.getSelfAddress(), akkaClusterManager.getSelfStatus());
+                responseHeader = ResponseHeader.OK;
+            } else {
+                LOGGER.info("Health Check - {} failed or is still trying to join the cluster.",
+                        akkaClusterManager.getSelfAddress());
+                responseHeader = ResponseHeader.OK.withStatus(503);
+            }
+            
+            return CompletableFuture.completedFuture(Pair.create(responseHeader,
+                    ResponseBody.<ActorSystemHealth>builder().payload(builder.build()).build()));
         };
     }
     
