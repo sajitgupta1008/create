@@ -1,11 +1,13 @@
 package com.rccl.middleware.guest.password;
 
+import akka.NotUsed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.CircuitBreaker;
 import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.broker.Topic;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountPasswordExceptionSerializer;
@@ -14,6 +16,7 @@ import com.typesafe.config.ConfigFactory;
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
 import static com.lightbend.lagom.javadsl.api.Service.topic;
+import static com.lightbend.lagom.javadsl.api.transport.Method.GET;
 import static com.lightbend.lagom.javadsl.api.transport.Method.POST;
 import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
@@ -27,6 +30,8 @@ public interface GuestAccountPasswordService extends Service {
     
     ServiceCall<PasswordInformation, ResponseBody<JsonNode>> updatePassword();
     
+    ServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> akkaClusterHealthCheck();
+    
     Topic<EmailNotification> emailNotificationTopic();
     
     @Override
@@ -36,7 +41,8 @@ public interface GuestAccountPasswordService extends Service {
                         restCall(POST, "/guestAccounts/:email/forgotPassword", this::forgotPassword),
                         restCall(POST, "/guestAccounts/forgotPassword/tokenValidation",
                                 this::validateForgotPasswordToken),
-                        restCall(PUT, "/guestAccounts/password", this::updatePassword)
+                        restCall(PUT, "/guestAccounts/password", this::updatePassword),
+                        restCall(GET, "/akkaCluster/health", this::akkaClusterHealthCheck)
                 )
                 .withTopics(
                         topic(NOTIFICATIONS_KAFKA_TOPIC, this::emailNotificationTopic)
