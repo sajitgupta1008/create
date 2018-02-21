@@ -1,6 +1,7 @@
 package com.rccl.middleware.guest.impl.password.email;
 
 import ch.qos.logback.classic.Logger;
+import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.rccl.middleware.aem.api.email.AemEmailService;
@@ -38,11 +39,11 @@ public class PasswordUpdatedConfirmationEmail {
         this.saviyntService = saviyntService;
     }
     
-    public void send(PasswordInformation pi) {
+    public void send(PasswordInformation pi, String languageCode) {
         LOGGER.info("#send - Attempting to send the email to: " + pi.getEmail());
         
         this.getGuestInformation(pi)
-                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest().getFirstName())
+                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest().getFirstName(), languageCode)
                         .thenAccept(htmlEmailTemplate -> {
                             String content = htmlEmailTemplate.getHtmlMessage();
                             String sender = htmlEmailTemplate.getSender();
@@ -74,7 +75,7 @@ public class PasswordUpdatedConfirmationEmail {
                 });
     }
     
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName) {
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName, String languageCode) {
         if (pi.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
         }
@@ -91,12 +92,17 @@ public class PasswordUpdatedConfirmationEmail {
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
         
+        Function<RequestHeader, RequestHeader> acceptLanguageHeader = rh ->
+                rh.withHeader("Accept-Language", languageCode);
+        
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
+                    .handleRequestHeader(acceptLanguageHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalPasswordUpdatedConfirmationEmailContent(firstName)
+                    .handleRequestHeader(acceptLanguageHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         }
