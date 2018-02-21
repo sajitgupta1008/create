@@ -2,6 +2,7 @@
 <ExtractVariables async="false" continueOnError="false" enabled="true" name="ExtractVariables.ExtractPathIntoVariable">
   <DisplayName>ExtractVariables.ExtractPathIntoVariable</DisplayName>
   <Variable name="request.uri">
+    <Pattern>/*/*/*/v*/{path}</Pattern>
     <Pattern>/v*/{path}</Pattern>
   </Variable>
   <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
