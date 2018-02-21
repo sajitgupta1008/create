@@ -76,7 +76,7 @@
   "healthChecks": [
     {
       "protocol": "HTTP",
-      "path": "/akka-cluster/health",
+      "path": "/akkaCluster/health",
       "gracePeriodSeconds": 60,
       "intervalSeconds": 15,
       "timeoutSeconds": 15,
