@@ -12,6 +12,7 @@ import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.aem.api.AemServiceImplStub;
 import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.email.AemEmailServiceStub;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.header.Header;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
@@ -21,7 +22,6 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.akka.ActorSystemHealth;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -253,13 +253,14 @@ public class GuestAccountPasswordServiceTest {
     
     @Test
     public void testAkkaClusterHealthCheck() throws Exception {
-        HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>> service =
-                (HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>>) guestAccountPasswordService.akkaClusterHealthCheck();
+        HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> service =
+                (HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>>) guestAccountPasswordService.akkaClusterHealthCheck();
         
-        Pair<ResponseHeader, ResponseBody<ActorSystemHealth>> response = service.invokeWithHeaders(RequestHeader.DEFAULT, NotUsed.getInstance())
+        Pair<ResponseHeader, ResponseBody<ActorSystemInformation>> response = service
+                .invokeWithHeaders(RequestHeader.DEFAULT, NotUsed.getInstance())
                 .toCompletableFuture().get(10, TimeUnit.SECONDS);
         
-        ActorSystemHealth payload = response.second().getPayload();
+        ActorSystemInformation payload = response.second().getPayload();
         
         assertNotNull(payload.getActorSystemName());
         assertNotNull(payload.getSelfAddress());

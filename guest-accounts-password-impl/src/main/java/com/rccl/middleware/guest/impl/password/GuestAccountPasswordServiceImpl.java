@@ -15,6 +15,7 @@ import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
@@ -29,8 +30,6 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.akka.ActorSystemHealth;
-import com.rccl.middleware.guest.password.akka.ActorSystemMember;
 import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountLockedException;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
@@ -49,8 +48,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -295,23 +292,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     }
     
     @Override
-    public HeaderServiceCall<NotUsed, ResponseBody<ActorSystemHealth>> akkaClusterHealthCheck() {
+    public HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> akkaClusterHealthCheck() {
         return (requestHeader, notUsed) -> {
-            
-            ActorSystemHealth.ActorSystemHealthBuilder builder = ActorSystemHealth.builder();
-            
-            builder.actorSystemName(akkaClusterManager.getActorSystemName())
-                    .selfAddress(akkaClusterManager.getSelfAddress());
-            
-            List<ActorSystemMember> members = new ArrayList<>();
-            akkaClusterManager.getClusterMembers().forEach(member ->
-                    members.add(ActorSystemMember.builder()
-                            .address(member.address().hostPort())
-                            .status(member.status().toString())
-                            .build()));
-            
-            builder.clusterMembers(members);
-            
             ResponseHeader responseHeader;
             if (akkaClusterManager.getSelfStatus() == MemberStatus.up()) {
                 LOGGER.info("Health Check - Akka self address {} with status: {}",
@@ -324,7 +306,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             }
             
             return CompletableFuture.completedFuture(Pair.create(responseHeader,
-                    ResponseBody.<ActorSystemHealth>builder().payload(builder.build()).build()));
+                    ResponseBody.<ActorSystemInformation>builder()
+                            .payload(akkaClusterManager.getActorSystemInformation()).build()));
         };
     }
     
