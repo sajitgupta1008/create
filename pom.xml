@@ -42,8 +42,6 @@
     <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
 
     <apache.lang.version>3.7</apache.lang.version>
-    <constructr.version>0.17.0</constructr.version>
-    <constructr.zookeeper.version>0.4.1</constructr.zookeeper.version>
     <hibernate.validator.version>6.0.7.Final</hibernate.validator.version>
     <jaxb.api.version>2.1</jaxb.api.version>
     <junit.version>4.12</junit.version>
@@ -507,19 +505,7 @@
         <artifactId>lagom-javadsl-testkit_2.11</artifactId>
         <version>${lagom.version}</version>
       </dependency>
-
-      <dependency>
-        <groupId>de.heikoseeberger</groupId>
-        <artifactId>constructr_2.11</artifactId>
-        <version>${constructr.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.lightbend.constructr</groupId>
-        <artifactId>constructr-coordination-zookeeper_2.11</artifactId>
-        <version>${constructr.zookeeper.version}</version>
-      </dependency>
-
+      
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
