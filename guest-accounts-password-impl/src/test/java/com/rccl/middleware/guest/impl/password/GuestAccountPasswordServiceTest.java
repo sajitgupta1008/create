@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static play.inject.Bindings.bind;
@@ -262,7 +263,7 @@ public class GuestAccountPasswordServiceTest {
         
         assertNotNull(payload.getActorSystemName());
         assertNotNull(payload.getSelfAddress());
-        assertTrue(!payload.getClusterMembers().isEmpty());
+        assertFalse(payload.getClusterMembers().isEmpty());
     }
     
     private ForgotPassword createSampleForgotPassword() {
