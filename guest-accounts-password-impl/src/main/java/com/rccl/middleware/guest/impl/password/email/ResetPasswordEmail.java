@@ -1,6 +1,7 @@
 package com.rccl.middleware.guest.impl.password.email;
 
 import ch.qos.logback.classic.Logger;
+import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.rccl.middleware.aem.api.email.AemEmailService;
@@ -29,10 +30,10 @@ public class ResetPasswordEmail {
         this.persistentEntityRegistry = persistentEntityRegistry;
     }
     
-    public void send(ForgotPassword fp, String email, String firstName, String resetPasswordUrl) {
+    public void send(ForgotPassword fp, String email, String firstName, String resetPasswordUrl, RequestHeader requestHeader) {
         LOGGER.info("#send - Attempting to send the email to: " + email);
         
-        this.getEmailContent(fp, firstName, resetPasswordUrl)
+        this.getEmailContent(fp, firstName, resetPasswordUrl, requestHeader)
                 .thenAccept(htmlEmailTemplate -> {
                     String content = htmlEmailTemplate.getHtmlMessage();
                     String sender = htmlEmailTemplate.getSender();
@@ -50,7 +51,7 @@ public class ResetPasswordEmail {
     }
     
     private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName,
-                                                               String resetPasswordUrl) {
+                                                               String resetPasswordUrl, RequestHeader requestHeader) {
         if (fp.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the ForgotPassword must not be null.");
         }
@@ -66,12 +67,16 @@ public class ResetPasswordEmail {
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
         
+        Function<RequestHeader, RequestHeader> reqHeader = rh -> requestHeader;
+        
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityForgotPasswordEmailContent(firstName, resetPasswordUrl)
+                    .handleRequestHeader(reqHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalForgotPasswordEmailContent(firstName, resetPasswordUrl)
+                    .handleRequestHeader(reqHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         }

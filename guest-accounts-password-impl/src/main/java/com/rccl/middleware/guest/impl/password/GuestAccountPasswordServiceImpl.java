@@ -132,9 +132,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     })
                     .thenCompose(accountStatus -> {
                         if (StringUtils.isNotBlank(accountStatus.getVdsId())) {
-                            return this.executeVDSUserForgotPasswordEmail(accountStatus, request, email);
+                            return this.executeVDSUserForgotPasswordEmail(accountStatus, request, email, requestHeader);
                         } else if ("NeedsToBeMigrated".equals(accountStatus.getMessage())) {
-                            return this.executeWebShopperForgotPasswordEmail(request, email);
+                            return this.executeWebShopperForgotPasswordEmail(request, email, requestHeader);
                         } else {
                             throw new GuestNotFoundException();
                         }
@@ -285,7 +285,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             }
             
             return stage.thenApplyAsync(returnMe -> {
-                passwordUpdatedConfirmationEmail.send(request);
+                passwordUpdatedConfirmationEmail.send(request, requestHeader);
                 return returnMe;
             });
         };
@@ -379,7 +379,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @return {@link NotUsed}
      */
     private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeVDSUserForgotPasswordEmail(
-            AccountStatus status, ForgotPassword request, String email) {
+            AccountStatus status, ForgotPassword request, String email, RequestHeader requestHeader) {
         
         return saviyntService
                 .getGuestAccount("email", Optional.of(email), Optional.empty())
@@ -419,7 +419,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     resetPasswordEmail.send(request,
                             email,
                             saviyntResponse.getGuest().getFirstName(),
-                            resetPasswordUrl.toString());
+                            resetPasswordUrl.toString(), requestHeader);
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
@@ -433,7 +433,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @return {@link NotUsed}
      */
     private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeWebShopperForgotPasswordEmail(
-            ForgotPassword request, String email) {
+            ForgotPassword request, String email, RequestHeader requestHeader) {
         WebShopperAccount shopperAccount = WebShopperAccount.builder().userIdentifier(email).build();
         
         return saviyntService.getWebShopperPasswordToken()
@@ -467,7 +467,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     resetPasswordEmail.send(request,
                             email,
                             saviyntResponse.getFirstName(),
-                            resetPasswordUrl);
+                            resetPasswordUrl, requestHeader);
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
