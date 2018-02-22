@@ -10,6 +10,7 @@ import com.lightbend.lagom.javadsl.jackson.JacksonExceptionSerializer;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import play.Environment;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import static com.rccl.middleware.guest.password.exceptions.GuestPasswordErrorCodeConstants.ACCOUNT_LOCKOUT;
@@ -61,8 +62,8 @@ public class GuestAccountPasswordExceptionSerializer implements ExceptionSeriali
                     
                 }
             }
-        } catch (Exception e) {
-            return new MiddlewareTransportException(TransportErrorCode.InternalServerError, e.getMessage());
+        } catch (IOException e) {
+            // No-op.
         }
         
         return new MiddlewareTransportException(TransportErrorCode.InternalServerError, "An error occurred.");

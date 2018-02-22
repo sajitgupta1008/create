@@ -43,7 +43,8 @@ public class PasswordUpdatedConfirmationEmail {
         LOGGER.info("#send - Attempting to send the email to: " + pi.getEmail());
         
         this.getGuestInformation(pi)
-                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest().getFirstName(), languageCode)
+                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest()
+                        .getFirstName(), languageCode)
                         .thenAccept(htmlEmailTemplate -> {
                             String content = htmlEmailTemplate.getHtmlMessage();
                             String sender = htmlEmailTemplate.getSender();
@@ -75,7 +76,8 @@ public class PasswordUpdatedConfirmationEmail {
                 });
     }
     
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName, String languageCode) {
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName,
+                                                               String languageCode) {
         if (pi.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
         }
