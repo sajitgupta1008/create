@@ -63,7 +63,7 @@ public class GuestAccountPasswordExceptionSerializer implements ExceptionSeriali
                 }
             }
         } catch (IOException e) {
-            // No-op.
+            return new MiddlewareTransportException(TransportErrorCode.InternalServerError, e.getMessage());
         }
         
         return new MiddlewareTransportException(TransportErrorCode.InternalServerError, "An error occurred.");
