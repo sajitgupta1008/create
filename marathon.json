@@ -76,11 +76,11 @@
   "healthChecks": [
     {
       "protocol": "HTTP",
-      "path": "/_status/circuit-breaker/current",
-      "gracePeriodSeconds": 300,
-      "intervalSeconds": 60,
-      "timeoutSeconds": 20,
-      "maxConsecutiveFailures": 3,
+      "path": "/akkaCluster/health",
+      "gracePeriodSeconds": 60,
+      "intervalSeconds": 15,
+      "timeoutSeconds": 15,
+      "maxConsecutiveFailures": 10,
       "ignoreHttp1xx": false
     }
   ],

@@ -1,6 +1,7 @@
 package com.rccl.middleware.guest.impl.password;
 
 import akka.NotUsed;
+import akka.cluster.MemberStatus;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +14,8 @@ import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
+import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
@@ -66,6 +69,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
+    private final AkkaClusterManager akkaClusterManager;
+    
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
     
     private final GuestAuthenticationService guestAuthenticationService;
@@ -79,12 +84,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     private final PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail;
     
     @Inject
-    public GuestAccountPasswordServiceImpl(GuestAuthenticationService guestAuthenticationService,
+    public GuestAccountPasswordServiceImpl(AkkaClusterManager akkaClusterManager,
+                                           GuestAuthenticationService guestAuthenticationService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry,
                                            ResetPasswordEmail resetPasswordEmail,
                                            PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail) {
+        this.akkaClusterManager = akkaClusterManager;
+        
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         this.guestAuthenticationService = guestAuthenticationService;
@@ -290,6 +298,26 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                 passwordUpdatedConfirmationEmail.send(request, languageCode);
                 return returnMe;
             });
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> akkaClusterHealthCheck() {
+        return (requestHeader, notUsed) -> {
+            ResponseHeader responseHeader;
+            if (akkaClusterManager.getSelfStatus() == MemberStatus.up()) {
+                LOGGER.info("Health Check - Akka self address {} with status: {}",
+                        akkaClusterManager.getSelfAddress(), akkaClusterManager.getSelfStatus());
+                responseHeader = ResponseHeader.OK;
+            } else {
+                LOGGER.info("Health Check - {} failed or is still trying to join the cluster.",
+                        akkaClusterManager.getSelfAddress());
+                responseHeader = ResponseHeader.OK.withStatus(503);
+            }
+            
+            return CompletableFuture.completedFuture(Pair.create(responseHeader,
+                    ResponseBody.<ActorSystemInformation>builder()
+                            .payload(akkaClusterManager.getActorSystemInformation()).build()));
         };
     }
     
