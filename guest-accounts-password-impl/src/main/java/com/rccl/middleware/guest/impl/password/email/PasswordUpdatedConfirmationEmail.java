@@ -39,12 +39,12 @@ public class PasswordUpdatedConfirmationEmail {
         this.saviyntService = saviyntService;
     }
     
-    public void send(PasswordInformation pi, String languageCode) {
+    public void send(PasswordInformation pi, RequestHeader requestHeader) {
         LOGGER.info("#send - Attempting to send the email to: " + pi.getEmail());
         
         this.getGuestInformation(pi)
                 .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest()
-                        .getFirstName(), languageCode)
+                        .getFirstName(), requestHeader)
                         .thenAccept(htmlEmailTemplate -> {
                             String content = htmlEmailTemplate.getHtmlMessage();
                             String sender = htmlEmailTemplate.getSender();
@@ -77,7 +77,7 @@ public class PasswordUpdatedConfirmationEmail {
     }
     
     private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName,
-                                                               String languageCode) {
+                                                               RequestHeader requestHeader) {
         if (pi.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
         }
@@ -94,17 +94,16 @@ public class PasswordUpdatedConfirmationEmail {
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
         
-        Function<RequestHeader, RequestHeader> acceptLanguageHeader = rh ->
-                rh.withHeader("Accept-Language", languageCode);
+        Function<RequestHeader, RequestHeader> reqHeader = rh -> requestHeader;
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(acceptLanguageHeader)
+                    .handleRequestHeader(reqHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(acceptLanguageHeader)
+                    .handleRequestHeader(reqHeader)
                     .invoke()
                     .exceptionally(exceptionally);
         }
