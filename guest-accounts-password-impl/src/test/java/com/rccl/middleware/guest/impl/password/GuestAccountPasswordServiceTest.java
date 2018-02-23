@@ -1,5 +1,6 @@
 package com.rccl.middleware.guest.impl.password;
 
+import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.japi.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,6 +12,7 @@ import com.rccl.middleware.aem.api.AemService;
 import com.rccl.middleware.aem.api.AemServiceImplStub;
 import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.email.AemEmailServiceStub;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.header.Header;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidationException;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static play.inject.Bindings.bind;
@@ -246,6 +249,22 @@ public class GuestAccountPasswordServiceTest {
                 .get(5, TimeUnit.SECONDS);
         
         assertTrue("This should fail and throw an exception instead.", result == null);
+    }
+    
+    @Test
+    public void testAkkaClusterHealthCheck() throws Exception {
+        HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> service =
+                (HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>>) guestAccountPasswordService.akkaClusterHealthCheck();
+        
+        Pair<ResponseHeader, ResponseBody<ActorSystemInformation>> response = service
+                .invokeWithHeaders(RequestHeader.DEFAULT, NotUsed.getInstance())
+                .toCompletableFuture().get(10, TimeUnit.SECONDS);
+        
+        ActorSystemInformation payload = response.second().getPayload();
+        
+        assertNotNull(payload.getActorSystemName());
+        assertNotNull(payload.getSelfAddress());
+        assertFalse(payload.getClusterMembers().isEmpty());
     }
     
     private ForgotPassword createSampleForgotPassword() {

@@ -8,7 +8,7 @@
   <parent>
     <groupId>com.rccl.middleware</groupId>
     <artifactId>guest-accounts-password</artifactId>
-    <version>1.1.1</version>
+    <version>1.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>guest-accounts-password-impl</artifactId>
@@ -57,17 +57,7 @@
       <groupId>com.lightbend.lagom</groupId>
       <artifactId>lagom-javadsl-kafka-broker_2.11</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>de.heikoseeberger</groupId>
-      <artifactId>constructr_2.11</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.lightbend.constructr</groupId>
-      <artifactId>constructr-coordination-zookeeper_2.11</artifactId>
-    </dependency>
-
+    
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -91,6 +81,11 @@
     <dependency>
       <groupId>com.rccl.middleware</groupId>
       <artifactId>middleware-common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>middleware-akka-cluster-manager</artifactId>
     </dependency>
 
     <dependency>

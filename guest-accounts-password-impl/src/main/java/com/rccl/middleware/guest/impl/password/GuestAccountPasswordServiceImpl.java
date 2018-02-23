@@ -1,6 +1,7 @@
 package com.rccl.middleware.guest.impl.password;
 
 import akka.NotUsed;
+import akka.cluster.MemberStatus;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +14,8 @@ import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
 import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
+import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
+import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
@@ -62,6 +65,8 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     
+    private final AkkaClusterManager akkaClusterManager;
+    
     private final GuestAccountPasswordValidator guestAccountPasswordValidator;
     
     private final GuestAuthenticationService guestAuthenticationService;
@@ -75,12 +80,15 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     private final PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail;
     
     @Inject
-    public GuestAccountPasswordServiceImpl(GuestAuthenticationService guestAuthenticationService,
+    public GuestAccountPasswordServiceImpl(AkkaClusterManager akkaClusterManager,
+                                           GuestAuthenticationService guestAuthenticationService,
                                            SaviyntService saviyntService,
                                            GuestAccountPasswordValidator guestAccountPasswordValidator,
                                            PersistentEntityRegistry persistentEntityRegistry,
                                            ResetPasswordEmail resetPasswordEmail,
                                            PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail) {
+        this.akkaClusterManager = akkaClusterManager;
+        
         this.saviyntService = saviyntService;
         this.guestAccountPasswordValidator = guestAccountPasswordValidator;
         this.guestAuthenticationService = guestAuthenticationService;
@@ -124,9 +132,9 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     })
                     .thenCompose(accountStatus -> {
                         if (StringUtils.isNotBlank(accountStatus.getVdsId())) {
-                            return this.executeVDSUserForgotPasswordEmail(accountStatus, request, email);
+                            return this.executeVDSUserForgotPasswordEmail(accountStatus, request, email, requestHeader);
                         } else if ("NeedsToBeMigrated".equals(accountStatus.getMessage())) {
-                            return this.executeWebShopperForgotPasswordEmail(request, email);
+                            return this.executeWebShopperForgotPasswordEmail(request, email, requestHeader);
                         } else {
                             throw new GuestNotFoundException();
                         }
@@ -277,10 +285,29 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             }
             
             return stage.thenApplyAsync(returnMe -> {
-                // TODO: Re-enable this logic and unit tests once the Email Communication story is re-approved.
-                // passwordUpdatedConfirmationEmail.send(request);
+                passwordUpdatedConfirmationEmail.send(request, requestHeader);
                 return returnMe;
             });
+        };
+    }
+    
+    @Override
+    public HeaderServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> akkaClusterHealthCheck() {
+        return (requestHeader, notUsed) -> {
+            ResponseHeader responseHeader;
+            if (akkaClusterManager.getSelfStatus() == MemberStatus.up()) {
+                LOGGER.info("Health Check - Akka self address {} with status: {}",
+                        akkaClusterManager.getSelfAddress(), akkaClusterManager.getSelfStatus());
+                responseHeader = ResponseHeader.OK;
+            } else {
+                LOGGER.info("Health Check - {} failed or is still trying to join the cluster.",
+                        akkaClusterManager.getSelfAddress());
+                responseHeader = ResponseHeader.OK.withStatus(503);
+            }
+            
+            return CompletableFuture.completedFuture(Pair.create(responseHeader,
+                    ResponseBody.<ActorSystemInformation>builder()
+                            .payload(akkaClusterManager.getActorSystemInformation()).build()));
         };
     }
     
@@ -352,7 +379,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @return {@link NotUsed}
      */
     private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeVDSUserForgotPasswordEmail(
-            AccountStatus status, ForgotPassword request, String email) {
+            AccountStatus status, ForgotPassword request, String email, RequestHeader requestHeader) {
         
         return saviyntService
                 .getGuestAccount("email", Optional.of(email), Optional.empty())
@@ -392,7 +419,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     resetPasswordEmail.send(request,
                             email,
                             saviyntResponse.getGuest().getFirstName(),
-                            resetPasswordUrl.toString());
+                            resetPasswordUrl.toString(), requestHeader);
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });
@@ -406,7 +433,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
      * @return {@link NotUsed}
      */
     private CompletionStage<Pair<ResponseHeader, ResponseBody>> executeWebShopperForgotPasswordEmail(
-            ForgotPassword request, String email) {
+            ForgotPassword request, String email, RequestHeader requestHeader) {
         WebShopperAccount shopperAccount = WebShopperAccount.builder().userIdentifier(email).build();
         
         return saviyntService.getWebShopperPasswordToken()
@@ -440,7 +467,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                     resetPasswordEmail.send(request,
                             email,
                             saviyntResponse.getFirstName(),
-                            resetPasswordUrl);
+                            resetPasswordUrl, requestHeader);
                     
                     return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                 });

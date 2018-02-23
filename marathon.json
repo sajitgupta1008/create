@@ -6,7 +6,7 @@
   "user": null,
   "env": {
     "AKKA_PORT": "1339",
-    "AEM_EMAIL": "http://dev1-int.api.rccl.com",
+    "AEM_EMAIL": "https://dev1-int.api.rccl.com",
     "NOTIFICATIONS_EMAIL_TOPIC_NAME": "notifications_email_dev_v1",
     "CAS_CONTACT_POINT_THREE": "10.16.6.162",
     "AEM": "http://stg-rcldigital.aem.rccl.com",
@@ -22,8 +22,8 @@
     "AKKA_ACTOR_SYSTEM": "guest-accounts-password-application",
     "CONSTRUCTR_COORDINATION_NODES": "10.16.4.101:2181,10.16.4.227:2181,10.16.7.225:2181",
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
-    "SAVIYNT": "http://dev1-int.api.rccl.com",
-    "GUEST_ACCOUNTS_AUTHENTICATION": "http://dev1-int.api.rccl.com/v1",
+    "SAVIYNT": "https://dev1-int.api.rccl.com",
+    "GUEST_ACCOUNTS_AUTHENTICATION": "https://dev1-int.api.rccl.com/v1",
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
     "HTTP_PORT": "9022",
@@ -76,11 +76,11 @@
   "healthChecks": [
     {
       "protocol": "HTTP",
-      "path": "/_status/circuit-breaker/current",
-      "gracePeriodSeconds": 300,
-      "intervalSeconds": 60,
-      "timeoutSeconds": 20,
-      "maxConsecutiveFailures": 3,
+      "path": "/akkaCluster/health",
+      "gracePeriodSeconds": 60,
+      "intervalSeconds": 15,
+      "timeoutSeconds": 15,
+      "maxConsecutiveFailures": 10,
       "ignoreHttp1xx": false
     }
   ],
@@ -118,3 +118,4 @@
   ],
   "requirePorts": false
 }
+
