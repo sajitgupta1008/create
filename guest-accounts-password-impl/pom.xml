@@ -8,7 +8,7 @@
   <parent>
     <groupId>com.rccl.middleware</groupId>
     <artifactId>guest-accounts-password</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.0</version>
   </parent>
 
   <artifactId>guest-accounts-password-impl</artifactId>
