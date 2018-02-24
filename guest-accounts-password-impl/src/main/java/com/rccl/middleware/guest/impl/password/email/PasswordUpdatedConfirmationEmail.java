@@ -93,19 +93,17 @@ public class PasswordUpdatedConfirmationEmail {
             LOGGER.error("#getEmailContent:", throwable);
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
-    
+        
         String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
-        Function<RequestHeader, RequestHeader> reqHeader = rh -> RequestHeader.DEFAULT
-                .withHeader("Accept-Language", acceptLanguage);
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(reqHeader)
+                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(reqHeader)
+                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
                     .invoke()
                     .exceptionally(exceptionally);
         }

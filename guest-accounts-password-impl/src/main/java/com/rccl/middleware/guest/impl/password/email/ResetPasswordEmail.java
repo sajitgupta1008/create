@@ -8,8 +8,8 @@ import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
-import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.ForgotPassword;
+import com.rccl.middleware.guest.password.email.EmailNotification;
 
 import javax.inject.Inject;
 import java.util.concurrent.CompletionStage;
@@ -66,19 +66,17 @@ public class ResetPasswordEmail {
             LOGGER.error("#getEmailContent:", throwable);
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
-    
+        
         String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
-        Function<RequestHeader, RequestHeader> reqHeader = rh -> RequestHeader.DEFAULT
-                .withHeader("Accept-Language", acceptLanguage);
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(reqHeader)
+                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(reqHeader)
+                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
                     .invoke()
                     .exceptionally(exceptionally);
         }
