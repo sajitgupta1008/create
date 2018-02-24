@@ -93,8 +93,10 @@ public class PasswordUpdatedConfirmationEmail {
             LOGGER.error("#getEmailContent:", throwable);
             throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
         };
-        
-        Function<RequestHeader, RequestHeader> reqHeader = rh -> requestHeader;
+    
+        String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
+        Function<RequestHeader, RequestHeader> reqHeader = rh -> RequestHeader.DEFAULT
+                .withHeader("Accept-Language", acceptLanguage);
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
