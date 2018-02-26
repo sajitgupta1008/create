@@ -30,13 +30,29 @@ public class ResetPasswordEmail {
         this.persistentEntityRegistry = persistentEntityRegistry;
     }
     
-    public void send(ForgotPassword fp, String email, String firstName, String resetPasswordUrl, RequestHeader requestHeader) {
-        LOGGER.info("#send - Attempting to send the email to: " + email);
+    /**
+     * Retrieves all the necessary information from both VDS and AEM for reset password email confirmation.
+     *
+     * @param fp               the {@link ForgotPassword} object from request service invocation.
+     * @param email            the email address where the email will be sent to.
+     * @param firstName        the first name of the guest who owns the email address.
+     * @param resetPasswordUrl the reset password URL to be included in the email.
+     * @param requestHeader    the {@link RequestHeader} from service request invocation.
+     */
+    public void send(ForgotPassword fp, String email, String firstName, String resetPasswordUrl,
+                     RequestHeader requestHeader) {
+        LOGGER.info("#send - Attempting to send the email to: {}", email);
+        
+        if (fp.getHeader() == null) {
+            throw new IllegalArgumentException("The header property in the ForgotPassword must not be null.");
+        }
         
         this.getEmailContent(fp, firstName, resetPasswordUrl, requestHeader)
                 .thenAccept(htmlEmailTemplate -> {
                     String content = htmlEmailTemplate.getHtmlMessage();
-                    String sender = htmlEmailTemplate.getSender();
+                    String sender = htmlEmailTemplate.getSender() == null
+                            ? EmailBrandSenderEnum.getEmailAddressFromBrand(fp.getHeader().getBrand())
+                            : htmlEmailTemplate.getSender();
                     String subject = htmlEmailTemplate.getSubject();
                     
                     EmailNotification en = EmailNotification.builder()
@@ -68,15 +84,17 @@ public class ResetPasswordEmail {
         };
         
         String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
+        Function<RequestHeader, RequestHeader> aemRequestHeaderFunction = rh ->
+                rh.withHeader("Accept-Language", acceptLanguage);
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
+                    .handleRequestHeader(aemRequestHeaderFunction)
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
+                    .handleRequestHeader(aemRequestHeaderFunction)
                     .invoke()
                     .exceptionally(exceptionally);
         }

@@ -39,15 +39,29 @@ public class PasswordUpdatedConfirmationEmail {
         this.saviyntService = saviyntService;
     }
     
+    /**
+     * Retrieves all the necessary information from both VDS and AEM for password update email confirmation.
+     *
+     * @param pi            the {@link PasswordInformation} from service request invocation.
+     * @param requestHeader the {@link RequestHeader} from service request invocation.
+     */
     public void send(PasswordInformation pi, RequestHeader requestHeader) {
         LOGGER.info("#send - Attempting to send the email to: " + pi.getEmail());
         
+        if (pi.getHeader() == null) {
+            throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
+        }
+        
+        Character brand = pi.getHeader().getBrand();
+        
         this.getGuestInformation(pi)
-                .thenAccept(accountInformation -> this.getEmailContent(pi, accountInformation.getGuest()
+                .thenAccept(accountInformation -> this.getEmailContent(brand, accountInformation.getGuest()
                         .getFirstName(), requestHeader)
                         .thenAccept(htmlEmailTemplate -> {
                             String content = htmlEmailTemplate.getHtmlMessage();
-                            String sender = htmlEmailTemplate.getSender();
+                            String sender = htmlEmailTemplate.getSender() == null
+                                    ? EmailBrandSenderEnum.getEmailAddressFromBrand(brand)
+                                    : htmlEmailTemplate.getSender();
                             String subject = htmlEmailTemplate.getSubject();
                             
                             EmailNotification en = EmailNotification.builder()
@@ -76,14 +90,8 @@ public class PasswordUpdatedConfirmationEmail {
                 });
     }
     
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(PasswordInformation pi, String firstName,
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(Character brand, String firstName,
                                                                RequestHeader requestHeader) {
-        if (pi.getHeader() == null) {
-            throw new IllegalArgumentException("The header property in the PasswordInformation must not be null.");
-        }
-        
-        Character brand = pi.getHeader().getBrand();
-        
         if (brand == null) {
             throw new IllegalArgumentException("The brand header property in the "
                     + "PasswordInformation must not be null.");
@@ -95,15 +103,17 @@ public class PasswordUpdatedConfirmationEmail {
         };
         
         String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
+        Function<RequestHeader, RequestHeader> aemRequestHeaderFunction = rh ->
+                rh.withHeader("Accept-Language", acceptLanguage);
         
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
+                    .handleRequestHeader(aemRequestHeaderFunction)
                     .invoke()
                     .exceptionally(exceptionally);
         } else if ('R' == brand || 'r' == brand) {
             return aemEmailService.getRoyalPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(rh -> rh.withHeader("Accept-Language", acceptLanguage))
+                    .handleRequestHeader(aemRequestHeaderFunction)
                     .invoke()
                     .exceptionally(exceptionally);
         }
