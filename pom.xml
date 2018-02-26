@@ -7,7 +7,7 @@
 
   <groupId>com.rccl.middleware</groupId>
   <artifactId>guest-accounts-password</artifactId>
-  <version>1.4.2</version>
+  <version>1.4.3-SNAPSHOT</version>
 
   <packaging>pom</packaging>
 
@@ -149,8 +149,8 @@
         <version>${lagom.version}</version>
         <configuration>
           <unmanagedServices>
-            <aem-email>http://dev1.api.rccl.com</aem-email>
-            <saviynt>http://dev1.api.rccl.com</saviynt>
+            <aem-email>https://dev1-int.api.rccl.com</aem-email>
+            <saviynt>https://dev1-int.api.rccl.com</saviynt>
             <guest_accounts_authentication>http://dev1.api.rccl.com/v1</guest_accounts_authentication>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
