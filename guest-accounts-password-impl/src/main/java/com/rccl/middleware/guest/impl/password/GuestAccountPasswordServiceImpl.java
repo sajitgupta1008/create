@@ -290,7 +290,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         return (requestHeader, notUsed) -> {
             ResponseHeader responseHeader;
             if (akkaClusterManager.getSelfStatus() == MemberStatus.up()) {
-                LOGGER.info("Health Check - Akka self address {} with status: {}",
+                LOGGER.debug("Health Check - Akka self address {} with status: {}",
                         akkaClusterManager.getSelfAddress(), akkaClusterManager.getSelfStatus());
                 responseHeader = ResponseHeader.OK;
             } else {
