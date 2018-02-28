@@ -37,6 +37,12 @@
       "targets": []
     },
     {
+      "name": "ship-prod-ad",
+      "policies": [],
+      "proxies": [],
+      "targets": []
+    },
+    {
       "name": "ship-prod-al",
       "policies": [],
       "proxies": [],
