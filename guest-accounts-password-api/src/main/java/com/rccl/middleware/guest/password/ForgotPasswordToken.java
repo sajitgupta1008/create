@@ -31,15 +31,6 @@ public class ForgotPasswordToken {
     @Pattern(regexp = "\\d+", message = "A Shopper ID must be numeric.", groups = WebShopperChecks.class)
     String webShopperId;
     
-    @NotEmpty(message = "A WebShopper username is required.", groups = WebShopperChecks.class)
-    String webShopperUsername;
-    
-    @NotEmpty(message = "A first name is required.", groups = WebShopperChecks.class)
-    String firstName;
-    
-    @NotEmpty(message = "A last name is required.", groups = WebShopperChecks.class)
-    String lastName;
-    
     @NotEmpty(message = "A token is required.", groups = DefaultChecks.class)
     String token;
     

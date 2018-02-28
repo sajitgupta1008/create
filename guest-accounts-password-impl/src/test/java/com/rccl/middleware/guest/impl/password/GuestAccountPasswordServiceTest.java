@@ -22,6 +22,7 @@ import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
+import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenException;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -141,10 +142,8 @@ public class GuestAccountPasswordServiceTest {
     public void testSuccessfulWebShopperForgotPasswordTokenValidation() throws Exception {
         ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
                 .webShopperId("12345678")
-                .webShopperUsername("username")
-                .firstName("first")
-                .lastName("last")
-                .token("imaginethisisatoken")
+                .token("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJJRFwiOlwiMTIzNDU2Nzh8Zmlyc3R8bGFzdHx1c"
+                        + "2VybmFtZVwifSIsImV4cCI6MTUxOTkyNjEwOX0.rxiV0mN8MaRDBnzycSKX7TdLJj2ng46zhbZYEJPTcxs")
                 .build();
         
         HeaderServiceCall<ForgotPasswordToken, ResponseBody> tokenValidationService =
@@ -193,6 +192,27 @@ public class GuestAccountPasswordServiceTest {
                 .toCompletableFuture().get(5, TimeUnit.SECONDS);
         
         assertTrue("Must return a Saviynt exception instead.", false);
+    }
+    
+    @Test(expected = InvalidPasswordTokenException.class)
+    public void testFailureForgotPasswordTokenValidationForWebShopper() throws Exception {
+        // Should throw an exception for webshopperId mismatch.
+        ForgotPasswordToken forgotPasswordToken = ForgotPasswordToken.builder()
+                .webShopperId("4567")
+                .token("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJJRFwiOlwiMTIzNHxGaXJzdE5hb"
+                        + "WV8TGFzdE5hbWV8c2hvcHBlclVzZXJOYW1lMTIzXCJ9IiwiZXhwIjoxNTE5OTI2MTA5fQ.ZlIFw"
+                        + "-7zgqVdfHYcJoO9Khw5hg_yDkYdp-n8Nriw9ls")
+                .build();
+        
+        HeaderServiceCall<ForgotPasswordToken, ResponseBody> tokenValidationService =
+                (HeaderServiceCall<ForgotPasswordToken, ResponseBody>) guestAccountPasswordService
+                        .validateForgotPasswordToken();
+        
+        tokenValidationService
+                .invokeWithHeaders(RequestHeader.DEFAULT, forgotPasswordToken)
+                .toCompletableFuture().get(5, TimeUnit.SECONDS);
+        
+        assertTrue("Must throw an exception instead.", false);
     }
     
     @Test

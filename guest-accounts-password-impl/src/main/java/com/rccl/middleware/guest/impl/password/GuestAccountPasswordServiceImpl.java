@@ -20,8 +20,8 @@ import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
-import com.rccl.middleware.guest.authentication.AccountCredentials;
 import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
+import com.rccl.middleware.guest.authentication.requests.AccountCredentials;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationEntity;
 import com.rccl.middleware.guest.impl.password.email.EmailNotificationTag;
 import com.rccl.middleware.guest.impl.password.email.PasswordUpdatedConfirmationEmail;
@@ -163,13 +163,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
             } else {
                 MiddlewareValidation.validateWithGroups(request, CONSTRAINT_VIOLATION,
                         ForgotPasswordToken.WebShopperChecks.class);
-                saviyntUserToken = SaviyntUserToken.builder()
-                        .user(request.getWebShopperId() + "|"
-                                + request.getFirstName() + "|"
-                                + request.getLastName() + "|"
-                                + request.getWebShopperUsername())
-                        .token(request.getToken())
-                        .build();
+                saviyntUserToken = GuestAccountsPasswordHelper.populatePropertiesFromToken(request);
             }
             
             return saviyntService.validateUserToken().invoke(saviyntUserToken)
@@ -452,16 +446,13 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
                         throw new InvalidEmailException();
                     }
                     
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500),
+                    throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
                             throwable.getMessage(), UNKNOWN_ERROR);
                 })
                 .thenApply(saviyntResponse -> {
                     String resetPasswordUrl = request.getLink()
                             + "?email=" + email
                             + "&webShopperId=" + saviyntResponse.getShopperId()
-                            + "&webShopperUserName=" + saviyntResponse.getLoginUsername()
-                            + "&firstName=" + saviyntResponse.getFirstName()
-                            + "&lastName=" + saviyntResponse.getLastName()
                             + "&token=" + saviyntResponse.getToken();
                     
                     resetPasswordEmail.send(request,
