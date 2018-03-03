@@ -36,10 +36,15 @@ import com.rccl.middleware.saviynt.api.requests.SaviyntUpdatePassword;
 import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
 import com.rccl.middleware.saviynt.api.requests.WebShopperAccount;
 import com.rccl.middleware.saviynt.api.responses.AccountStatus;
+import com.rccl.middleware.vds.VDSService;
+import com.rccl.middleware.vds.exceptions.VDSExceptionFactory;
+import com.rccl.middleware.vds.responses.WebShopperView;
+import com.rccl.middleware.vds.responses.WebShopperViewList;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.ConnectException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -64,12 +69,16 @@ public class GuestAccountsPasswordHelper {
     
     private final PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail;
     
+    private final VDSService vdsService;
+    
     @Inject
     public GuestAccountsPasswordHelper(SaviyntService saviyntService,
                                        ResetPasswordEmail resetPasswordEmail,
                                        GuestAuthenticationService guestAuthenticationService,
-                                       PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail) {
+                                       PasswordUpdatedConfirmationEmail passwordUpdatedConfirmationEmail,
+                                       VDSService vdsService) {
         this.saviyntService = saviyntService;
+        this.vdsService = vdsService;
         this.resetPasswordEmail = resetPasswordEmail;
         this.guestAuthenticationService = guestAuthenticationService;
         this.passwordUpdatedConfirmationEmail = passwordUpdatedConfirmationEmail;
@@ -358,6 +367,55 @@ public class GuestAccountsPasswordHelper {
     }
     
     /**
+     * Invokes {@code VDS Get WebShopper Attributes API} to retrieve {@link WebShopperViewList} based on the
+     * given email address.
+     * <p>
+     * If the email address provided ends up with multiple webshopper accounts, it will try to compare the email
+     * from the argument with the webshopper usernames in the {@link WebShopperViewList}. It will return the index
+     * of the object if there is a match, otherwise, will return the first in the list.
+     *
+     * @param email the email address to look up.
+     * @return {@link CompletionStage}<{@link WebShopperView}>
+     */
+    private CompletionStage<WebShopperView> getWebShopperViewFromEmail(String email) {
+        return vdsService.getWebShopperAttributes("emailaddr=" + email).invoke()
+                .exceptionally(throwable -> {
+                    LOGGER.error("An error occurred when trying to get WebShoppe attributes.", throwable);
+                    Throwable cause = throwable.getCause();
+                    if (cause instanceof ConnectException
+                            || cause instanceof VDSExceptionFactory.GenericVDSException) {
+                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                throwable.getMessage(), UNKNOWN_ERROR);
+                    }
+                    
+                    throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
+                            throwable.getMessage(), UNKNOWN_ERROR);
+                })
+                .thenApply(webShopperViewList -> {
+                    WebShopperView webShopperView = null;
+                    if (webShopperViewList != null && !webShopperViewList.getWebshopperViews().isEmpty()) {
+                        List<WebShopperView> webshopperViews = webShopperViewList.getWebshopperViews();
+                        if (webshopperViews.size() == 1) {
+                            webShopperView = webshopperViews.get(0);
+                        } else {
+                            for (WebShopperView view : webShopperViewList.getWebshopperViews()) {
+                                if (email.equalsIgnoreCase(view.getWebshopperUsername())) {
+                                    webShopperView = view;
+                                    break;
+                                }
+                            }
+                            // get the first index if there aren't any match with webshopper username.
+                            if (webShopperView == null) {
+                                webShopperView = webshopperViews.get(0);
+                            }
+                        }
+                    }
+                    
+                    return webShopperView;
+                });
+    }
+    
+    /**
      * Prepares and executes a persistent entity event request for a WebShopper User version of forgot password email.
      *
      * @param request {@link ForgotPassword} from forgotPassword service call.
@@ -366,39 +424,52 @@ public class GuestAccountsPasswordHelper {
      */
     protected CompletionStage<Pair<ResponseHeader, ResponseBody>> executeWebShopperForgotPasswordEmail(
             ForgotPassword request, String email, RequestHeader requestHeader) {
-        WebShopperAccount shopperAccount = WebShopperAccount.builder().userIdentifier(email).build();
         
-        return saviyntService.getWebShopperPasswordToken()
-                .invoke(shopperAccount)
-                .exceptionally(throwable -> {
-                    LOGGER.error("An error occurred when trying to get WebShopper Password Token", throwable);
-                    Throwable cause = throwable.getCause();
-                    if (cause instanceof ConnectException
-                            || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
-                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
-                                throwable.getMessage(), UNKNOWN_ERROR);
-                    } else if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
-                            || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+        return this.getWebShopperViewFromEmail(email)
+                .thenCompose(webshopper -> {
+                    if (webshopper == null) {
                         throw new GuestNotFoundException();
-                    } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
-                        throw new InvalidEmailException();
                     }
                     
-                    throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
-                            throwable.getMessage(), UNKNOWN_ERROR);
-                })
-                .thenApply(saviyntResponse -> {
-                    String resetPasswordUrl = request.getLink()
-                            + "?email=" + email
-                            + "&webShopperId=" + saviyntResponse.getShopperId()
-                            + "&token=" + saviyntResponse.getToken();
+                    WebShopperAccount shopperAccount = WebShopperAccount.builder()
+                            .userIdentifier(webshopper.getWebshopperId())
+                            .propertyToSearch("customproperty15")
+                            .build();
                     
-                    resetPasswordEmail.send(request,
-                            email,
-                            saviyntResponse.getFirstName(),
-                            resetPasswordUrl, requestHeader);
-                    
-                    return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
+                    LOGGER.debug("A webshopper was found. Proceeding with token generation.");
+                    return saviyntService.getWebShopperPasswordToken()
+                            .invoke(shopperAccount)
+                            .exceptionally(throwable -> {
+                                LOGGER.error("An error occurred when trying to get WebShopper Password Token",
+                                        throwable);
+                                Throwable cause = throwable.getCause();
+                                if (cause instanceof ConnectException
+                                        || cause instanceof SaviyntExceptionFactory.SaviyntEnvironmentException) {
+                                    throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                            throwable.getMessage(), UNKNOWN_ERROR);
+                                } else if (cause instanceof SaviyntExceptionFactory.ExistingGuestException
+                                        || cause instanceof SaviyntExceptionFactory.NoSuchGuestException) {
+                                    throw new GuestNotFoundException();
+                                } else if (cause instanceof SaviyntExceptionFactory.InvalidEmailFormatException) {
+                                    throw new InvalidEmailException();
+                                }
+                                
+                                throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
+                                        throwable.getMessage(), UNKNOWN_ERROR);
+                            })
+                            .thenApply(saviyntResponse -> {
+                                String resetPasswordUrl = request.getLink()
+                                        + "?email=" + email
+                                        + "&webShopperId=" + saviyntResponse.getShopperId()
+                                        + "&token=" + saviyntResponse.getToken();
+                                
+                                resetPasswordEmail.send(request,
+                                        email,
+                                        saviyntResponse.getFirstName(),
+                                        resetPasswordUrl, requestHeader);
+                                
+                                return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
+                            });
                 });
     }
     
