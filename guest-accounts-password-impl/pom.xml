@@ -57,7 +57,7 @@
       <groupId>com.lightbend.lagom</groupId>
       <artifactId>lagom-javadsl-kafka-broker_2.11</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -96,6 +96,11 @@
     <dependency>
       <groupId>com.rccl.middleware</groupId>
       <artifactId>guest-accounts-saviynt</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>guest-accounts-vds</artifactId>
     </dependency>
 
     <dependency>

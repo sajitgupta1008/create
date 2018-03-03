@@ -52,6 +52,7 @@
     <middleware.common.version>1.22.0</middleware.common.version>
     <middleware.cluster-manager.version>1.0.0</middleware.cluster-manager.version>
     <middleware.saviynt.version>1.1.0</middleware.saviynt.version>
+    <middleware.vds.version>1.1.0-SNAPSHOT</middleware.vds.version>
     <middleware.authentication.version>1.3.3</middleware.authentication.version>
     <org.json.version>20170516</org.json.version>
     <play.version>2.5.18</play.version>
@@ -151,6 +152,7 @@
           <unmanagedServices>
             <aem-email>https://dev1-int.api.rccl.com</aem-email>
             <saviynt>https://dev1-int.api.rccl.com</saviynt>
+            <guest_accounts_vds>https://tst1-int.api.rccl.com</guest_accounts_vds>
             <guest_accounts_authentication>https://dev1-int.api.rccl.com/v1</guest_accounts_authentication>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
@@ -554,6 +556,12 @@
         <groupId>com.rccl.middleware</groupId>
         <artifactId>guest-accounts-saviynt</artifactId>
         <version>${middleware.saviynt.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.rccl.middleware</groupId>
+        <artifactId>guest-accounts-vds</artifactId>
+        <version>${middleware.vds.version}</version>
       </dependency>
 
       <dependency>
