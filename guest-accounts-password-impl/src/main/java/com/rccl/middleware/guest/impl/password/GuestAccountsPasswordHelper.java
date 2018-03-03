@@ -424,7 +424,6 @@ public class GuestAccountsPasswordHelper {
      */
     protected CompletionStage<Pair<ResponseHeader, ResponseBody>> executeWebShopperForgotPasswordEmail(
             ForgotPassword request, String email, RequestHeader requestHeader) {
-        
         return this.getWebShopperViewFromEmail(email)
                 .thenCompose(webshopper -> {
                     if (webshopper == null) {
@@ -480,8 +479,8 @@ public class GuestAccountsPasswordHelper {
      * @param pwd the {@link PasswordInformation} request.
      * @return {@link CompletionStage}
      */
-    protected CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> authenticateUser(RequestHeader requestHeader,
-                                                                                             PasswordInformation pwd) {
+    protected CompletionStage<Pair<ResponseHeader, ResponseBody<JsonNode>>> authenticateUser(
+            RequestHeader requestHeader, PasswordInformation pwd) {
         if (pwd.getHeader() != null
                 && "web".equals(pwd.getHeader().getChannel())) {
             return CompletableFuture.completedFuture(Pair.create(ResponseHeader.OK, ResponseBody
