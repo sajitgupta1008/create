@@ -26,6 +26,8 @@ import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenExcepti
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
+import com.rccl.middleware.vds.VDSService;
+import com.rccl.middleware.vds.VDSServiceStub;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,6 +56,7 @@ public class GuestAccountPasswordServiceTest {
                 .configureBuilder(builder -> builder.overrides(
                         bind(GuestAuthenticationService.class).to(GuestAuthenticationServiceStub.class),
                         bind(SaviyntService.class).to(SaviyntServiceImplStub.class),
+                        bind(VDSService.class).to(VDSServiceStub.class),
                         bind(AemService.class).to(AemServiceImplStub.class),
                         bind(AemEmailService.class).to(AemEmailServiceStub.class),
                         bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
