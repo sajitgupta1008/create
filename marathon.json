@@ -23,6 +23,7 @@
     "CONSTRUCTR_COORDINATION_NODES": "10.16.4.101:2181,10.16.4.227:2181,10.16.7.225:2181",
     "KAFKA_BOOTSTRAP_SERVERS": "10.16.5.94:9092, 10.16.5.91:9092",
     "SAVIYNT": "https://dev1-int.api.rccl.com",
+    "VDS": "https://dev1-int.api.rccl.com",
     "GUEST_ACCOUNTS_AUTHENTICATION": "https://dev1-int.api.rccl.com/v1",
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
