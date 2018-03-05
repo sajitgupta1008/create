@@ -367,55 +367,6 @@ public class GuestAccountsPasswordHelper {
     }
     
     /**
-     * Invokes {@code VDS Get WebShopper Attributes API} to retrieve {@link WebShopperViewList} based on the
-     * given email address.
-     * <p>
-     * If the email address provided ends up with multiple webshopper accounts, it will try to compare the email
-     * from the argument with the webshopper usernames in the {@link WebShopperViewList}. It will return the index
-     * of the object if there is a match, otherwise, will return the first in the list.
-     *
-     * @param email the email address to look up.
-     * @return {@link CompletionStage}<{@link WebShopperView}>
-     */
-    private CompletionStage<WebShopperView> getWebShopperViewFromEmail(String email) {
-        return vdsService.getWebShopperAttributes("emailaddr=" + email).invoke()
-                .exceptionally(throwable -> {
-                    LOGGER.error("An error occurred when trying to get WebShoppe attributes.", throwable);
-                    Throwable cause = throwable.getCause();
-                    if (cause instanceof ConnectException
-                            || cause instanceof VDSExceptionFactory.GenericVDSException) {
-                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
-                                throwable.getMessage(), UNKNOWN_ERROR);
-                    }
-                    
-                    throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
-                            throwable.getMessage(), UNKNOWN_ERROR);
-                })
-                .thenApply(webShopperViewList -> {
-                    WebShopperView webShopperView = null;
-                    if (webShopperViewList != null && !webShopperViewList.getWebshopperViews().isEmpty()) {
-                        List<WebShopperView> webshopperViews = webShopperViewList.getWebshopperViews();
-                        if (webshopperViews.size() == 1) {
-                            webShopperView = webshopperViews.get(0);
-                        } else {
-                            for (WebShopperView view : webShopperViewList.getWebshopperViews()) {
-                                if (email.equalsIgnoreCase(view.getWebshopperUsername())) {
-                                    webShopperView = view;
-                                    break;
-                                }
-                            }
-                            // get the first index if there aren't any match with webshopper username.
-                            if (webShopperView == null) {
-                                webShopperView = webshopperViews.get(0);
-                            }
-                        }
-                    }
-                    
-                    return webShopperView;
-                });
-    }
-    
-    /**
      * Prepares and executes a persistent entity event request for a WebShopper User version of forgot password email.
      *
      * @param request {@link ForgotPassword} from forgotPassword service call.
@@ -469,6 +420,55 @@ public class GuestAccountsPasswordHelper {
                                 
                                 return Pair.create(ResponseHeader.OK, ResponseBody.builder().build());
                             });
+                });
+    }
+    
+    /**
+     * Invokes {@code VDS Get WebShopper Attributes API} to retrieve {@link WebShopperViewList} based on the
+     * given email address.
+     * <p>
+     * If the email address provided ends up with multiple webshopper accounts, it will try to compare the email
+     * from the argument with the webshopper usernames in the {@link WebShopperViewList}. It will return the index
+     * of the object if there is a match, otherwise, will return the first in the list.
+     *
+     * @param email the email address to look up.
+     * @return {@link CompletionStage}<{@link WebShopperView}>
+     */
+    private CompletionStage<WebShopperView> getWebShopperViewFromEmail(String email) {
+        return vdsService.getWebShopperAttributes("emailaddr=" + email).invoke()
+                .exceptionally(throwable -> {
+                    LOGGER.error("An error occurred when trying to get WebShopper attributes.", throwable);
+                    Throwable cause = throwable.getCause();
+                    if (cause instanceof ConnectException
+                            || cause instanceof VDSExceptionFactory.GenericVDSException) {
+                        throw new MiddlewareTransportException(TransportErrorCode.ServiceUnavailable,
+                                throwable.getMessage(), UNKNOWN_ERROR);
+                    }
+                    
+                    throw new MiddlewareTransportException(TransportErrorCode.UnexpectedCondition,
+                            throwable.getMessage(), UNKNOWN_ERROR);
+                })
+                .thenApply(webShopperViewList -> {
+                    WebShopperView webShopperView = null;
+                    if (webShopperViewList != null && !webShopperViewList.getWebshopperViews().isEmpty()) {
+                        List<WebShopperView> webshopperViews = webShopperViewList.getWebshopperViews();
+                        if (webshopperViews.size() == 1) {
+                            webShopperView = webshopperViews.get(0);
+                        } else {
+                            for (WebShopperView shopper : webShopperViewList.getWebshopperViews()) {
+                                if (email.equalsIgnoreCase(shopper.getWebshopperUsername())) {
+                                    webShopperView = shopper;
+                                    break;
+                                }
+                            }
+                            // get the first index if there aren't any match with webshopper username.
+                            if (webShopperView == null) {
+                                webShopperView = webshopperViews.get(0);
+                            }
+                        }
+                    }
+                    
+                    return webShopperView;
                 });
     }
     
