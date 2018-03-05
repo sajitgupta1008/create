@@ -152,7 +152,7 @@
           <unmanagedServices>
             <aem-email>https://dev1-int.api.rccl.com</aem-email>
             <saviynt>https://dev1-int.api.rccl.com</saviynt>
-            <guest_accounts_vds>https://tst1-int.api.rccl.com</guest_accounts_vds>
+            <guest_accounts_vds>https://dev1-int.api.rccl.com</guest_accounts_vds>
             <guest_accounts_authentication>https://dev1-int.api.rccl.com/v1</guest_accounts_authentication>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
           </unmanagedServices>
