@@ -5,9 +5,7 @@ import akka.cluster.MemberStatus;
 import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
-import com.lightbend.lagom.javadsl.broker.TopicProducer;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
@@ -15,13 +13,10 @@ import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.common.response.ResponseBody;
 import com.rccl.middleware.common.validation.MiddlewareValidation;
-import com.rccl.middleware.guest.impl.password.email.EmailNotificationEntity;
-import com.rccl.middleware.guest.impl.password.email.EmailNotificationTag;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
-import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.saviynt.api.requests.SaviyntUserToken;
 
 import javax.inject.Inject;
@@ -39,9 +34,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     
     private final GuestAccountsPasswordHelper helper;
     
-    private final PersistentEntityRegistry persistentEntityRegistry;
-    
-    
     @Inject
     public GuestAccountPasswordServiceImpl(AkkaClusterManager akkaClusterManager,
                                            GuestAccountPasswordValidator validator,
@@ -50,9 +42,6 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         this.akkaClusterManager = akkaClusterManager;
         this.validator = validator;
         this.helper = helper;
-        
-        this.persistentEntityRegistry = persistentEntityRegistry;
-        persistentEntityRegistry.register(EmailNotificationEntity.class);
     }
     
     @Override
@@ -122,23 +111,4 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
         };
     }
     
-    @Override
-    public Topic<EmailNotification> emailNotificationTopic() {
-        return TopicProducer.singleStreamWithOffset(offset ->
-                persistentEntityRegistry
-                        .eventStream(EmailNotificationTag.EMAIL_NOTIFICATION_TAG, offset)
-                        .map(pair -> {
-                            LOGGER.debug("Publishing email notification message...");
-                            EmailNotification eventNotification = pair.first().getEmailNotification();
-                            EmailNotification emailNotification = EmailNotification
-                                    .builder()
-                                    .sender(eventNotification.getSender())
-                                    .recipient(eventNotification.getRecipient())
-                                    .subject(eventNotification.getSubject())
-                                    .content(eventNotification.getContent())
-                                    .build();
-                            return new Pair<>(emailNotification, pair.second());
-                        })
-        );
-    }
 }

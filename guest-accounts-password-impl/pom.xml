@@ -34,6 +34,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.rccl.middleware</groupId>
+      <artifactId>guest-accounts-notifications-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.lightbend.lagom</groupId>
       <artifactId>lagom-logback_2.11</artifactId>
     </dependency>

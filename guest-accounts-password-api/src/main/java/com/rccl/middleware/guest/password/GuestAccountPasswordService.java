@@ -22,8 +22,6 @@ import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;
 
 public interface GuestAccountPasswordService extends Service {
     
-    String NOTIFICATIONS_KAFKA_TOPIC = ConfigFactory.load().getString("kafka.notifications.topic.name");
-    
     ServiceCall<ForgotPassword, ResponseBody> forgotPassword(String email);
     
     ServiceCall<ForgotPasswordToken, ResponseBody> validateForgotPasswordToken();
@@ -31,8 +29,6 @@ public interface GuestAccountPasswordService extends Service {
     ServiceCall<PasswordInformation, ResponseBody<JsonNode>> updatePassword();
     
     ServiceCall<NotUsed, ResponseBody<ActorSystemInformation>> akkaClusterHealthCheck();
-    
-    Topic<EmailNotification> emailNotificationTopic();
     
     @Override
     default Descriptor descriptor() {
@@ -43,11 +39,7 @@ public interface GuestAccountPasswordService extends Service {
                                 this::validateForgotPasswordToken),
                         restCall(PUT, "/guestAccounts/password", this::updatePassword),
                         restCall(GET, "/akkaCluster/health", this::akkaClusterHealthCheck)
-                )
-                .withTopics(
-                        topic(NOTIFICATIONS_KAFKA_TOPIC, this::emailNotificationTopic)
-                )
-                .withCircuitBreaker(CircuitBreaker.identifiedBy("guest_accounts_password"))
+                ).withCircuitBreaker(CircuitBreaker.identifiedBy("guest_accounts_password"))
                 .withExceptionSerializer(GuestAccountPasswordExceptionSerializer.INSTANCE)
                 .withAutoAcl(true);
     }

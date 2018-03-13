@@ -9,7 +9,8 @@ import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.ForgotPassword;
-import com.rccl.middleware.guest.password.email.EmailNotification;
+import com.rccl.middleware.notification.email.EmailNotification;
+import com.rccl.middleware.notification.email.EmailNotificationService;
 
 import javax.inject.Inject;
 import java.util.concurrent.CompletionStage;
@@ -23,11 +24,15 @@ public class ResetPasswordEmail {
     
     private PersistentEntityRegistry persistentEntityRegistry;
     
+    private EmailNotificationService emailNotificationService;
+    
     @Inject
     public ResetPasswordEmail(AemEmailService aemEmailService,
-                              PersistentEntityRegistry persistentEntityRegistry) {
+                              PersistentEntityRegistry persistentEntityRegistry,
+                              EmailNotificationService emailNotificationService) {
         this.aemEmailService = aemEmailService;
         this.persistentEntityRegistry = persistentEntityRegistry;
+        this.emailNotificationService = emailNotificationService;
     }
     
     /**
@@ -62,7 +67,7 @@ public class ResetPasswordEmail {
                             .subject(subject)
                             .build();
                     
-                    this.sendToTopic(en);
+                    this.senEmailNotification(en);
                 });
     }
     
@@ -102,9 +107,14 @@ public class ResetPasswordEmail {
         throw new IllegalArgumentException("An invalid brand value was encountered: " + brand);
     }
     
-    private void sendToTopic(EmailNotification emailNotification) {
-        persistentEntityRegistry
-                .refFor(EmailNotificationEntity.class, emailNotification.getRecipient())
-                .ask(new EmailNotificationCommand.SendEmailNotification(emailNotification));
+    private void senEmailNotification(com.rccl.middleware.notification.email.EmailNotification emailNotification) {
+        emailNotificationService
+                .notification()
+                .invoke(emailNotification)
+                .exceptionally(throwable -> {
+                    LOGGER.error(throwable.getMessage());
+                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
+                    
+                });
     }
 }
