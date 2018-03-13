@@ -25,6 +25,7 @@
     "SAVIYNT": "https://dev1-int.api.rccl.com",
     "VDS": "https://dev1-int.api.rccl.com",
     "GUEST_ACCOUNTS_AUTHENTICATION": "https://dev1-int.api.rccl.com/v1",
+    "GUEST_ACCOUNTS_NOTIFICATION": "https://dev1-int.api.rccl.com",
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
     "HTTP_PORT": "9022",
