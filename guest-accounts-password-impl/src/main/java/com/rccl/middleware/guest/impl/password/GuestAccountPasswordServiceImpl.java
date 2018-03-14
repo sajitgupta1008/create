@@ -6,7 +6,6 @@ import akka.japi.Pair;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
-import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import com.rccl.middleware.akka.clustermanager.AkkaClusterManager;
 import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
@@ -37,8 +36,7 @@ public class GuestAccountPasswordServiceImpl implements GuestAccountPasswordServ
     @Inject
     public GuestAccountPasswordServiceImpl(AkkaClusterManager akkaClusterManager,
                                            GuestAccountPasswordValidator validator,
-                                           GuestAccountsPasswordHelper helper,
-                                           PersistentEntityRegistry persistentEntityRegistry) {
+                                           GuestAccountsPasswordHelper helper) {
         this.akkaClusterManager = akkaClusterManager;
         this.validator = validator;
         this.helper = helper;
