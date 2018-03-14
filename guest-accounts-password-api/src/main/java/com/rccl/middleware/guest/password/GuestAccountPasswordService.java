@@ -6,16 +6,12 @@ import com.lightbend.lagom.javadsl.api.CircuitBreaker;
 import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
-import com.lightbend.lagom.javadsl.api.broker.Topic;
 import com.rccl.middleware.akka.clustermanager.models.ActorSystemInformation;
 import com.rccl.middleware.common.response.ResponseBody;
-import com.rccl.middleware.guest.password.email.EmailNotification;
 import com.rccl.middleware.guest.password.exceptions.GuestAccountPasswordExceptionSerializer;
-import com.typesafe.config.ConfigFactory;
 
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
-import static com.lightbend.lagom.javadsl.api.Service.topic;
 import static com.lightbend.lagom.javadsl.api.transport.Method.GET;
 import static com.lightbend.lagom.javadsl.api.transport.Method.POST;
 import static com.lightbend.lagom.javadsl.api.transport.Method.PUT;

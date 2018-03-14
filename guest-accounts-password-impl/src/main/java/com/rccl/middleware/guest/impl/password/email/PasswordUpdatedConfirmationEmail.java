@@ -3,7 +3,6 @@ package com.rccl.middleware.guest.impl.password.email;
 import ch.qos.logback.classic.Logger;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
-import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
@@ -27,19 +26,15 @@ public class PasswordUpdatedConfirmationEmail {
     
     private AemEmailService aemEmailService;
     
-    private PersistentEntityRegistry persistentEntityRegistry;
-    
     private SaviyntService saviyntService;
     
     private EmailNotificationService emailNotificationService;
     
     @Inject
     public PasswordUpdatedConfirmationEmail(AemEmailService aemEmailService,
-                                            PersistentEntityRegistry persistentEntityRegistry,
                                             SaviyntService saviyntService,
                                             EmailNotificationService emailNotificationService) {
         this.aemEmailService = aemEmailService;
-        this.persistentEntityRegistry = persistentEntityRegistry;
         this.saviyntService = saviyntService;
         this.emailNotificationService = emailNotificationService;
     }
@@ -76,7 +71,7 @@ public class PasswordUpdatedConfirmationEmail {
                                     .subject(subject)
                                     .build();
                             
-                            this.senEmailNotification(en);
+                            this.sendEmailNotification(en);
                         }));
     }
     
@@ -126,14 +121,13 @@ public class PasswordUpdatedConfirmationEmail {
         throw new IllegalArgumentException("An invalid brand value was encountered: " + brand);
     }
     
-    private void senEmailNotification(com.rccl.middleware.notification.email.EmailNotification emailNotification) {
+    private void sendEmailNotification(EmailNotification emailNotification) {
         emailNotificationService
                 .notification()
                 .invoke(emailNotification)
                 .exceptionally(throwable -> {
                     LOGGER.error(throwable.getMessage());
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-                    
+                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
                 });
     }
 }

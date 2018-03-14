@@ -3,7 +3,6 @@ package com.rccl.middleware.guest.impl.password.email;
 import ch.qos.logback.classic.Logger;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
-import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
 import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
@@ -22,16 +21,12 @@ public class ResetPasswordEmail {
     
     private AemEmailService aemEmailService;
     
-    private PersistentEntityRegistry persistentEntityRegistry;
-    
     private EmailNotificationService emailNotificationService;
     
     @Inject
     public ResetPasswordEmail(AemEmailService aemEmailService,
-                              PersistentEntityRegistry persistentEntityRegistry,
                               EmailNotificationService emailNotificationService) {
         this.aemEmailService = aemEmailService;
-        this.persistentEntityRegistry = persistentEntityRegistry;
         this.emailNotificationService = emailNotificationService;
     }
     
@@ -67,7 +62,7 @@ public class ResetPasswordEmail {
                             .subject(subject)
                             .build();
                     
-                    this.senEmailNotification(en);
+                    this.sendEmailNotification(en);
                 });
     }
     
@@ -107,14 +102,13 @@ public class ResetPasswordEmail {
         throw new IllegalArgumentException("An invalid brand value was encountered: " + brand);
     }
     
-    private void senEmailNotification(com.rccl.middleware.notification.email.EmailNotification emailNotification) {
+    private void sendEmailNotification(EmailNotification emailNotification) {
         emailNotificationService
                 .notification()
                 .invoke(emailNotification)
                 .exceptionally(throwable -> {
                     LOGGER.error(throwable.getMessage());
-                    throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-                    
+                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
                 });
     }
 }

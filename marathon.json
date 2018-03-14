@@ -7,7 +7,6 @@
   "env": {
     "AKKA_PORT": "1339",
     "AEM_EMAIL": "https://dev1-int.api.rccl.com",
-    "NOTIFICATIONS_EMAIL_TOPIC_NAME": "notifications_email_dev_v1",
     "CAS_CONTACT_POINT_THREE": "10.16.6.162",
     "AEM": "http://stg-rcldigital.aem.rccl.com",
     "CAS_CONTACT_POINT_ONE": "10.16.4.106",
@@ -25,7 +24,7 @@
     "SAVIYNT": "https://dev1-int.api.rccl.com",
     "VDS": "https://dev1-int.api.rccl.com",
     "GUEST_ACCOUNTS_AUTHENTICATION": "https://dev1-int.api.rccl.com/v1",
-    "GUEST_ACCOUNTS_NOTIFICATION": "https://dev1-int.api.rccl.com",
+    "GUEST_ACCOUNTS_NOTIFICATION": "https://dev1-int.api.rccl.com/v1",
     "CASSANDRA_PORT": "8042",
     "CASSANDRA_KEYSPACE": "guest_accounts_password",
     "HTTP_PORT": "9022",

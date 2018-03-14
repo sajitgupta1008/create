@@ -156,7 +156,7 @@
             <guest_accounts_vds>https://dev1-int.api.rccl.com</guest_accounts_vds>
             <guest_accounts_authentication>https://dev1-int.api.rccl.com/v1</guest_accounts_authentication>
             <aem>http://stg-rcldigital.aem.rccl.com</aem>
-            <guest-accounts-notifications>https://dev1-int.api.rccl.com</guest-accounts-notifications>
+            <guest-accounts-notifications>https://dev1-int.api.rccl.com/v1</guest-accounts-notifications>
           </unmanagedServices>
           <kafkaEnabled>false</kafkaEnabled>
           <cassandraEnabled>false</cassandraEnabled>
