@@ -8,7 +8,7 @@ import com.rccl.middleware.common.logging.LogLevelUpdateScheduler;
 import com.rccl.middleware.guest.authentication.GuestAuthenticationService;
 import com.rccl.middleware.guest.impl.password.GuestAccountPasswordServiceImpl;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
-import com.rccl.middleware.notification.email.EmailNotificationService;
+import com.rccl.middleware.notifications.NotificationsService;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.vds.VDSService;
 
@@ -22,7 +22,7 @@ public class GuestAccountModule extends AbstractModule implements ServiceGuiceSu
         bindClient(VDSService.class);
         bindClient(AemService.class);
         bindClient(AemEmailService.class);
-        bindClient(EmailNotificationService.class);
+        bindClient(NotificationsService.class);
         bind(LogLevelUpdateScheduler.class).asEagerSingleton();
     }
 }

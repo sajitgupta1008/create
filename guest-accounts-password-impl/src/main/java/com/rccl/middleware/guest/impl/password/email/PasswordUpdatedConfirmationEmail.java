@@ -9,8 +9,8 @@ import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
-import com.rccl.middleware.notification.email.EmailNotification;
-import com.rccl.middleware.notification.email.EmailNotificationService;
+import com.rccl.middleware.notifications.EmailNotification;
+import com.rccl.middleware.notifications.NotificationsService;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import com.rccl.middleware.saviynt.api.responses.AccountInformation;
@@ -28,15 +28,15 @@ public class PasswordUpdatedConfirmationEmail {
     
     private SaviyntService saviyntService;
     
-    private EmailNotificationService emailNotificationService;
+    private NotificationsService notificationsService;
     
     @Inject
     public PasswordUpdatedConfirmationEmail(AemEmailService aemEmailService,
                                             SaviyntService saviyntService,
-                                            EmailNotificationService emailNotificationService) {
+                                            NotificationsService notificationsService) {
         this.aemEmailService = aemEmailService;
         this.saviyntService = saviyntService;
-        this.emailNotificationService = emailNotificationService;
+        this.notificationsService = notificationsService;
     }
     
     /**
@@ -122,8 +122,8 @@ public class PasswordUpdatedConfirmationEmail {
     }
     
     private void sendEmailNotification(EmailNotification emailNotification) {
-        emailNotificationService
-                .notification()
+        notificationsService
+                .sendEmail()
                 .invoke(emailNotification)
                 .exceptionally(throwable -> {
                     LOGGER.error(throwable.getMessage());
