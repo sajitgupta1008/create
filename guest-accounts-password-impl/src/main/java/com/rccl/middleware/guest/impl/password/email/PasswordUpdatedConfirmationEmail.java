@@ -61,7 +61,8 @@ public class PasswordUpdatedConfirmationEmail {
                             .getFirstName(), requestHeader, null)
                             .thenAccept(htmlEmailTemplate -> {
                                 
-                                EmailNotification emailNotification = notificationsHelper.createEmailNotification(htmlEmailTemplate, brand, pi.getEmail());
+                                EmailNotification emailNotification = notificationsHelper.createEmailNotification(
+                                        htmlEmailTemplate, brand, pi.getEmail());
                                 notificationsHelper.sendEmailNotification(emailNotification);
                             });
                 });

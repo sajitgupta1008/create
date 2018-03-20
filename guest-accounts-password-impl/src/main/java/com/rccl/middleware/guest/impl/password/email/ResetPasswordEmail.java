@@ -2,16 +2,11 @@ package com.rccl.middleware.guest.impl.password.email;
 
 import ch.qos.logback.classic.Logger;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
-import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
-import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
-import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.notifications.EmailNotification;
 
 import javax.inject.Inject;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 
 public class ResetPasswordEmail {
     
@@ -57,46 +52,9 @@ public class ResetPasswordEmail {
         
         aemEmailHelper.getEmailContent(brand, firstName, requestHeader, resetPasswordUrl)
                 .thenAccept(htmlEmailTemplate -> {
-                    EmailNotification emailNotification = notificationsHelper.createEmailNotification(htmlEmailTemplate, brand, email);
+                    EmailNotification emailNotification = notificationsHelper.createEmailNotification(
+                            htmlEmailTemplate, brand, email);
                     notificationsHelper.sendEmailNotification(emailNotification);
-                });
-    }
-    
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName,
-                                                               String resetPasswordUrl, RequestHeader requestHeader) {
-        
-        
-        Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
-            LOGGER.error("#getEmailContent:", throwable);
-            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-        };
-        
-        String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
-        Function<RequestHeader, RequestHeader> aemRequestHeaderFunction = rh ->
-                rh.withHeader("Accept-Language", acceptLanguage);
-        
-        if ('C' == brand || 'c' == brand) {
-            return aemEmailService.getCelebrityForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(aemRequestHeaderFunction)
-                    .invoke()
-                    .exceptionally(exceptionally);
-        } else if ('R' == brand || 'r' == brand) {
-            return aemEmailService.getRoyalForgotPasswordEmailContent(firstName, resetPasswordUrl)
-                    .handleRequestHeader(aemRequestHeaderFunction)
-                    .invoke()
-                    .exceptionally(exceptionally);
-        }
-        
-        throw new IllegalArgumentException("An invalid brand value was encountered: " + brand);
-    }
-    
-    private void sendEmailNotification(EmailNotification emailNotification) {
-        notificationsService
-                .sendEmail()
-                .invoke(emailNotification)
-                .exceptionally(throwable -> {
-                    LOGGER.error(throwable.getMessage());
-                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
                 });
     }
 }

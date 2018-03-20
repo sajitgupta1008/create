@@ -22,8 +22,10 @@ public class AemEmailHelper {
         this.aemEmailService = aemEmailService;
     }
     
-    public CompletionStage<HtmlEmailTemplate> getEmailContent(Character brand, String firstName,
-                                                              RequestHeader aemEmailRequestHeader, String resetPasswordUrl) {
+    public CompletionStage<HtmlEmailTemplate> getEmailContent(Character brand,
+                                                              String firstName,
+                                                              RequestHeader aemEmailRequestHeader,
+                                                              String resetPasswordUrl) {
         
         Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
             LOGGER.error("#getEmailContent:", throwable);
@@ -35,17 +37,18 @@ public class AemEmailHelper {
                 .withHeader("Accept-Language", acceptLanguage);
         
         if (resetPasswordUrl == null) {
-            return getPasswordUpdatedConfirmationEmailContent(brand, firstName, aemEmailServiceHeader, exceptionally);
+            return getPasswordUpdatedEmailContent(brand, firstName, aemEmailServiceHeader, exceptionally);
         } else {
-            return getForgotPasswordEmailContent(brand, firstName, aemEmailServiceHeader, exceptionally, resetPasswordUrl);
+            return getForgotPasswordEmailContent(brand, firstName, resetPasswordUrl, aemEmailServiceHeader,
+                    exceptionally);
         }
         
     }
     
-    private CompletionStage<HtmlEmailTemplate> getPasswordUpdatedConfirmationEmailContent(Character brand,
-                                                                                          String firstName,
-                                                                                          Function<RequestHeader, RequestHeader> aemEmailServiceHeader,
-                                                                                          Function<Throwable, ? extends HtmlEmailTemplate> exceptionally) {
+    private CompletionStage<HtmlEmailTemplate> getPasswordUpdatedEmailContent(
+            Character brand, String firstName, Function<RequestHeader, RequestHeader> aemEmailServiceHeader,
+            Function<Throwable, ? extends HtmlEmailTemplate> exceptionally) {
+        
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
                     .handleRequestHeader(aemEmailServiceHeader)
@@ -62,11 +65,11 @@ public class AemEmailHelper {
         
     }
     
-    private CompletionStage<HtmlEmailTemplate> getForgotPasswordEmailContent(Character brand,
-                                                                             String firstName,
-                                                                             Function<RequestHeader, RequestHeader> aemEmailServiceHeader,
-                                                                             Function<Throwable, ? extends HtmlEmailTemplate> exceptionally,
-                                                                             String resetPasswordUrl) {
+    private CompletionStage<HtmlEmailTemplate> getForgotPasswordEmailContent(
+            Character brand, String firstName, String resetPasswordUrl,
+            Function<RequestHeader, RequestHeader> aemEmailServiceHeader,
+            Function<Throwable, ? extends HtmlEmailTemplate> exceptionally) {
+        
         if ('C' == brand || 'c' == brand) {
             return aemEmailService.getCelebrityForgotPasswordEmailContent(firstName, resetPasswordUrl)
                     .handleRequestHeader(aemEmailServiceHeader)

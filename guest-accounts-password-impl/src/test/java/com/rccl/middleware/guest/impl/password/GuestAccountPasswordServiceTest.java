@@ -4,6 +4,7 @@ import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.japi.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.ResponseHeader;
 import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
@@ -23,6 +24,8 @@ import com.rccl.middleware.guest.password.ForgotPasswordToken;
 import com.rccl.middleware.guest.password.GuestAccountPasswordService;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.InvalidPasswordTokenException;
+import com.rccl.middleware.notifications.EmailNotification;
+import com.rccl.middleware.notifications.NotificationsService;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.SaviyntServiceImplStub;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
@@ -33,6 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup;
@@ -59,7 +63,8 @@ public class GuestAccountPasswordServiceTest {
                         bind(VDSService.class).to(VDSServiceStub.class),
                         bind(AemService.class).to(AemServiceImplStub.class),
                         bind(AemEmailService.class).to(AemEmailServiceStub.class),
-                        bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class)
+                        bind(GuestAccountPasswordService.class).to(GuestAccountPasswordServiceImpl.class),
+                        bind(NotificationsService.class).to(NotificationsServiceStub.class)
                 ));
         
         testServer = startServer(setup.withCassandra(true));
@@ -295,5 +300,13 @@ public class GuestAccountPasswordServiceTest {
                 .header(Header.builder().channel("web").brand('R').build())
                 .link("http://www.rccl.com/forgotPassword")
                 .build();
+    }
+    
+    private static class NotificationsServiceStub implements NotificationsService {
+        
+        @Override
+        public ServiceCall<EmailNotification, ResponseBody> sendEmail() {
+            return request -> CompletableFuture.completedFuture(ResponseBody.builder().payload("Email has been sent successfully.").build());
+        }
     }
 }
