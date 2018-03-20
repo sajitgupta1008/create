@@ -3,14 +3,11 @@ package com.rccl.middleware.guest.impl.password.email;
 import ch.qos.logback.classic.Logger;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
-import com.rccl.middleware.aem.api.email.AemEmailService;
-import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.PasswordInformation;
 import com.rccl.middleware.guest.password.exceptions.GuestNotFoundException;
 import com.rccl.middleware.notifications.EmailNotification;
-import com.rccl.middleware.notifications.NotificationsService;
 import com.rccl.middleware.saviynt.api.SaviyntService;
 import com.rccl.middleware.saviynt.api.exceptions.SaviyntExceptionFactory;
 import com.rccl.middleware.saviynt.api.responses.AccountInformation;
@@ -18,25 +15,24 @@ import com.rccl.middleware.saviynt.api.responses.AccountInformation;
 import javax.inject.Inject;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 
 public class PasswordUpdatedConfirmationEmail {
     
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(PasswordUpdatedConfirmationEmail.class);
     
-    private AemEmailService aemEmailService;
+    private AemEmailHelper aemEmailHelper;
     
     private SaviyntService saviyntService;
     
-    private NotificationsService notificationsService;
+    private NotificationsHelper notificationsHelper;
     
     @Inject
-    public PasswordUpdatedConfirmationEmail(AemEmailService aemEmailService,
+    public PasswordUpdatedConfirmationEmail(AemEmailHelper aemEmailHelper,
                                             SaviyntService saviyntService,
-                                            NotificationsService notificationsService) {
-        this.aemEmailService = aemEmailService;
+                                            NotificationsHelper notificationsHelper) {
+        this.notificationsHelper = notificationsHelper;
         this.saviyntService = saviyntService;
-        this.notificationsService = notificationsService;
+        this.aemEmailHelper = aemEmailHelper;
     }
     
     /**
@@ -55,24 +51,20 @@ public class PasswordUpdatedConfirmationEmail {
         Character brand = pi.getHeader().getBrand();
         
         this.getGuestInformation(pi)
-                .thenAccept(accountInformation -> this.getEmailContent(brand, accountInformation.getGuest()
-                        .getFirstName(), requestHeader)
-                        .thenAccept(htmlEmailTemplate -> {
-                            String content = htmlEmailTemplate.getHtmlMessage();
-                            String sender = htmlEmailTemplate.getSender() == null
-                                    ? EmailBrandSenderEnum.getEmailAddressFromBrand(brand)
-                                    : htmlEmailTemplate.getSender();
-                            String subject = htmlEmailTemplate.getSubject();
-                            
-                            EmailNotification en = EmailNotification.builder()
-                                    .content(content)
-                                    .recipient(pi.getEmail())
-                                    .sender(sender)
-                                    .subject(subject)
-                                    .build();
-                            
-                            this.sendEmailNotification(en);
-                        }));
+                .thenAccept(accountInformation -> {
+                    if (brand == null) {
+                        throw new IllegalArgumentException("The brand header property in the "
+                                + "PasswordInformation must not be null.");
+                    }
+                    
+                    aemEmailHelper.getEmailContent(brand, accountInformation.getGuest()
+                            .getFirstName(), requestHeader, null)
+                            .thenAccept(htmlEmailTemplate -> {
+                                
+                                EmailNotification emailNotification = notificationsHelper.createEmailNotification(htmlEmailTemplate, brand, pi.getEmail());
+                                notificationsHelper.sendEmailNotification(emailNotification);
+                            });
+                });
     }
     
     private CompletionStage<AccountInformation> getGuestInformation(PasswordInformation pi) {
@@ -87,47 +79,6 @@ public class PasswordUpdatedConfirmationEmail {
                     }
                     
                     throw new MiddlewareTransportException(TransportErrorCode.BadRequest, throwable);
-                });
-    }
-    
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(Character brand, String firstName,
-                                                               RequestHeader requestHeader) {
-        if (brand == null) {
-            throw new IllegalArgumentException("The brand header property in the "
-                    + "PasswordInformation must not be null.");
-        }
-        
-        Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
-            LOGGER.error("#getEmailContent:", throwable);
-            throw new MiddlewareTransportException(TransportErrorCode.fromHttp(500), throwable);
-        };
-        
-        String acceptLanguage = requestHeader.getHeader("Accept-Language").orElse("");
-        Function<RequestHeader, RequestHeader> aemRequestHeaderFunction = rh ->
-                rh.withHeader("Accept-Language", acceptLanguage);
-        
-        if ('C' == brand || 'c' == brand) {
-            return aemEmailService.getCelebrityPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(aemRequestHeaderFunction)
-                    .invoke()
-                    .exceptionally(exceptionally);
-        } else if ('R' == brand || 'r' == brand) {
-            return aemEmailService.getRoyalPasswordUpdatedConfirmationEmailContent(firstName)
-                    .handleRequestHeader(aemRequestHeaderFunction)
-                    .invoke()
-                    .exceptionally(exceptionally);
-        }
-        
-        throw new IllegalArgumentException("An invalid brand value was encountered: " + brand);
-    }
-    
-    private void sendEmailNotification(EmailNotification emailNotification) {
-        notificationsService
-                .sendEmail()
-                .invoke(emailNotification)
-                .exceptionally(throwable -> {
-                    LOGGER.error(throwable.getMessage());
-                    throw new MiddlewareTransportException(TransportErrorCode.InternalServerError, throwable);
                 });
     }
 }

@@ -3,13 +3,11 @@ package com.rccl.middleware.guest.impl.password.email;
 import ch.qos.logback.classic.Logger;
 import com.lightbend.lagom.javadsl.api.transport.RequestHeader;
 import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
-import com.rccl.middleware.aem.api.email.AemEmailService;
 import com.rccl.middleware.aem.api.models.HtmlEmailTemplate;
 import com.rccl.middleware.common.exceptions.MiddlewareTransportException;
 import com.rccl.middleware.common.logging.RcclLoggerFactory;
 import com.rccl.middleware.guest.password.ForgotPassword;
 import com.rccl.middleware.notifications.EmailNotification;
-import com.rccl.middleware.notifications.NotificationsService;
 
 import javax.inject.Inject;
 import java.util.concurrent.CompletionStage;
@@ -19,15 +17,15 @@ public class ResetPasswordEmail {
     
     private static final Logger LOGGER = RcclLoggerFactory.getLogger(ResetPasswordEmail.class);
     
-    private AemEmailService aemEmailService;
+    private AemEmailHelper aemEmailHelper;
     
-    private NotificationsService notificationsService;
+    private NotificationsHelper notificationsHelper;
     
     @Inject
-    public ResetPasswordEmail(AemEmailService aemEmailService,
-                              NotificationsService notificationsService) {
-        this.aemEmailService = aemEmailService;
-        this.notificationsService = notificationsService;
+    public ResetPasswordEmail(AemEmailHelper aemEmailHelper,
+                              NotificationsHelper notificationsHelper) {
+        this.aemEmailHelper = aemEmailHelper;
+        this.notificationsHelper = notificationsHelper;
     }
     
     /**
@@ -47,27 +45,6 @@ public class ResetPasswordEmail {
             throw new IllegalArgumentException("The header property in the ForgotPassword must not be null.");
         }
         
-        this.getEmailContent(fp, firstName, resetPasswordUrl, requestHeader)
-                .thenAccept(htmlEmailTemplate -> {
-                    String content = htmlEmailTemplate.getHtmlMessage();
-                    String sender = htmlEmailTemplate.getSender() == null
-                            ? EmailBrandSenderEnum.getEmailAddressFromBrand(fp.getHeader().getBrand())
-                            : htmlEmailTemplate.getSender();
-                    String subject = htmlEmailTemplate.getSubject();
-                    
-                    EmailNotification en = EmailNotification.builder()
-                            .content(content)
-                            .recipient(email)
-                            .sender(sender)
-                            .subject(subject)
-                            .build();
-                    
-                    this.sendEmailNotification(en);
-                });
-    }
-    
-    private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName,
-                                                               String resetPasswordUrl, RequestHeader requestHeader) {
         if (fp.getHeader() == null) {
             throw new IllegalArgumentException("The header property in the ForgotPassword must not be null.");
         }
@@ -77,6 +54,17 @@ public class ResetPasswordEmail {
         if (brand == null) {
             throw new IllegalArgumentException("The brand header property in the ForgotPassword must not be null.");
         }
+        
+        aemEmailHelper.getEmailContent(brand, firstName, requestHeader, resetPasswordUrl)
+                .thenAccept(htmlEmailTemplate -> {
+                    EmailNotification emailNotification = notificationsHelper.createEmailNotification(htmlEmailTemplate, brand, email);
+                    notificationsHelper.sendEmailNotification(emailNotification);
+                });
+    }
+    
+    private CompletionStage<HtmlEmailTemplate> getEmailContent(ForgotPassword fp, String firstName,
+                                                               String resetPasswordUrl, RequestHeader requestHeader) {
+        
         
         Function<Throwable, ? extends HtmlEmailTemplate> exceptionally = throwable -> {
             LOGGER.error("#getEmailContent:", throwable);
