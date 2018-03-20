@@ -60,10 +60,11 @@ public class PasswordUpdatedConfirmationEmail {
                     aemEmailHelper.getEmailContent(brand, accountInformation.getGuest()
                             .getFirstName(), requestHeader, null)
                             .thenAccept(htmlEmailTemplate -> {
-                                
-                                EmailNotification emailNotification = notificationsHelper.createEmailNotification(
-                                        htmlEmailTemplate, brand, pi.getEmail());
-                                notificationsHelper.sendEmailNotification(emailNotification);
+                                if (htmlEmailTemplate != null) {
+                                    EmailNotification emailNotification = notificationsHelper.createEmailNotification(
+                                            htmlEmailTemplate, brand, pi.getEmail());
+                                    notificationsHelper.sendEmailNotification(emailNotification);
+                                }
                             });
                 });
     }

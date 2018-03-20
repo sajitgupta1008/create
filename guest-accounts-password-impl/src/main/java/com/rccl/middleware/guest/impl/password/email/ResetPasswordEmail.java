@@ -52,9 +52,11 @@ public class ResetPasswordEmail {
         
         aemEmailHelper.getEmailContent(brand, firstName, requestHeader, resetPasswordUrl)
                 .thenAccept(htmlEmailTemplate -> {
-                    EmailNotification emailNotification = notificationsHelper.createEmailNotification(
-                            htmlEmailTemplate, brand, email);
-                    notificationsHelper.sendEmailNotification(emailNotification);
+                    if (htmlEmailTemplate != null) {
+                        EmailNotification emailNotification = notificationsHelper.createEmailNotification(
+                                htmlEmailTemplate, brand, email);
+                        notificationsHelper.sendEmailNotification(emailNotification);
+                    }
                 });
     }
 }
